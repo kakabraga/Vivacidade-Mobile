@@ -1,0 +1,42 @@
+version: '3.7'
+
+services:
+  php:
+    build:
+      context: C:\Users\Pichau\Desktop\Docker
+      dockerfile: Dockerfile
+    container_name: php_4
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./www:/var/www   # Mapeamento para os arquivos do projeto
+    depends_on:
+      - db
+
+  db:
+    image: mysql:5.7
+    command: --innodb-use-native-aio=0
+    container_name: db_4
+    restart: always
+    tty: true
+    ports:
+      - "3307:3306"
+    volumes:
+      - ./mysql:/var/lib/mysql  # Mapeamento para o banco de dados
+    environment:
+      - MYSQL_DATABASE=db_concessionaria
+      - MYSQL_ROOT_PASSWORD=1234
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: phpmyadmin
+    restart: always
+    ports:
+      - "8080:80"
+    environment:
+      PMA_HOST: db
+      MYSQL_ROOT_PASSWORD: 1234
+    depends_on:
+      - db
