@@ -4,8 +4,6 @@ const db = require('../config/db');
 const getAllPosts = (callback) => {
     db.query('SELECT * FROM posts', callback);
 };
-
-
 const getPorId = (id, callback) => {
     const sql = 'SELECT * FROM posts WHERE id= ?';
     db.query(sql, [id], (err, result) => {
@@ -14,9 +12,9 @@ const getPorId = (id, callback) => {
 };
 
 // Criar um post
-const createPost = (title, content, userId, callback) => {
-    const sql = 'INSERT INTO posts (title, content, userId) VALUES (?, ?, ?)';
-    db.query(sql, [title, content, userId], callback);
+const createPost = (title, content, userId, imagePath, callback) => {
+    const sql = 'INSERT INTO posts (title, content, userId, image) VALUES (?, ?, ?, ?)';
+    db.query(sql, [title, content, userId, imagePath], callback);
 };
 
 // Atualizar um post

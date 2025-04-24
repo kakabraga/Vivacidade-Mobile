@@ -1,96 +1,136 @@
-import React, { useState, useContext } from 'react';
-import { View, Text, TextInput, Button, Image, TouchableOpacity, StyleSheet, Alert } from 'react-native';
-// import * as ImagePicker from 'expo-image-picker';
-import { useAuth } from '../context/auth';  // Importando o contexto de autenticação
-import api from '../global/services/api';  // Sua instância de API
+import React, { useState } from "react";
+import {
+  View,
+  Text,
+  TextInput,
+  Button,
+  Image,
+  TouchableOpacity,
+  StyleSheet,
+  Alert,
+  Platform,
+} from "react-native";
+import { useAuth } from "../context/auth";
+import api from "../global/services/api";
+import * as ImagePicker from "expo-image-picker";
 
 export default function Post({ navigation }) {
-  const [titulo, setTitulo] = useState('');
-  const [conteudo, setConteudo] = useState('');
-  // const [imagem, setImagem] = useState(null);
-  const { user } = useAuth();  // Acessando o usuário autenticado do contexto de autenticação
+  const [titulo, setTitulo] = useState("");
+  const [conteudo, setConteudo] = useState("");
+  const [imagem, setImagem] = useState(null);
+  const [imagemFile, setImagemFile] = useState(null); // para Web
+  const { user } = useAuth();
   const userId = user ? user.id : "500";
-  // console.log(titulo, conteudo, userId);
-  // console.log('Usuário logado:', user);
 
-  // Função para escolher a imagem
   const pickImage = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
+      aspect: [4, 3],
       quality: 1,
     });
 
-    if (!result.canceled) {
+    if (!result.canceled && result.assets?.length > 0) {
       setImagem(result.assets[0].uri);
     }
   };
 
-  // Função para enviar o post
-  const [isLoading, setIsLoading] = useState(false);
-
   const handleSubmit = async () => {
     if (!titulo || !conteudo) {
-      return Alert.alert('Erro', 'Preencha todos os campos');
+      return Alert.alert("Erro", "Preencha todos os campos");
     }
-  
-    const post = {
-      title: titulo,
-      content: conteudo,
-      userId: userId,  // Garantindo que o user esteja presente
-    };
-  
+
     try {
-      setIsLoading(true);  // Começa o carregamento
-  
-      const response = await api.post('/api/posts/create', post, {
+      let formData = new FormData();
+      formData.append("title", titulo);
+      formData.append("content", conteudo);
+      formData.append("userId", userId);
+
+      if (Platform.OS === "web" && imagemFile) {
+        formData.append("image", imagemFile);
+      } else if (imagem && Platform.OS !== "web") {
+        formData.append("image", {
+          uri: imagem,
+          type: "image/jpeg",
+          name: `photo_${Date.now()}.jpg`,
+        });
+      }
+
+      const response = await api.post("/api/posts/create", formData, {
         headers: {
-          'Content-Type': 'application/json', // Altere para 'application/json'
+          "Content-Type": "multipart/form-data",
         },
       });
-  
-      setIsLoading(false);  // Finaliza o carregamento
-  
-      Alert.alert('Post criado com sucesso!');
-      setTitulo('');
-      setConteudo('');
+
+      Alert.alert("Post criado com sucesso!");
+      setTitulo("");
+      setConteudo("");
+      setImagem(null);
+      setImagemFile(null);
     } catch (error) {
-      setIsLoading(false);  // Finaliza o carregamento
-      console.log(titulo, conteudo, userId);
-      console.error('Erro ao enviar post:', error);
-      Alert.alert('Erro', 'Erro ao criar post: ' + (error.response?.data?.error || 'Erro desconhecido'));
+      console.error("Erro ao enviar post:", error);
+      Alert.alert(
+        "Erro",
+        "Erro ao criar post: " +
+          (error.response?.data?.message || "Erro desconhecido")
+      );
     }
   };
 
   return (
     <View style={styles.container}>
-        <View style={styles.box}>
-      <Text style={styles.label}>Título</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Digite o título"
-        value={titulo}
-        onChangeText={setTitulo}
-      />
+      <View style={styles.box}>
+        <Text style={styles.label}>Título</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Digite o título"
+          value={titulo}
+          onChangeText={setTitulo}
+        />
 
-      <Text style={styles.label}>Conteúdo</Text>
-      <TextInput
-        style={[styles.input, { height: 100 }]}
-        placeholder="Digite o conteúdo"
-        multiline
-        value={conteudo}
-        onChangeText={setConteudo}
-      />
+        <Text style={styles.label}>Conteúdo</Text>
+        <TextInput
+          style={[styles.input, { height: 100 }]}
+          placeholder="Digite o conteúdo"
+          multiline
+          value={conteudo}
+          onChangeText={setConteudo}
+        />
 
-      <TouchableOpacity style={styles.imageButton} onPress={pickImage}>
-        <Text style={styles.imageButtonText}>Selecionar Imagem (opcional)</Text>
-      </TouchableOpacity>
+        {Platform.OS === "web" ? (
+          <View style={styles.imageButton}>
+            <Text
+              style={styles.imageButtonText}
+              onPress={() => document.getElementById("fileInput").click()}>
+              Selecionar Imagem (opcional)
+            </Text>
+            <input
+              id="fileInput"
+              type="file"
+              accept="image/*"
+              style={{ display: "none" }}
+              onChange={(e) => {
+                const file = e.target.files[0];
+                if (file) {
+                  setImagem(URL.createObjectURL(file));
+                  setImagemFile(file);
+                }
+              }}
+            />
+          </View>
+        ) : (
+          <TouchableOpacity style={styles.imageButton} onPress={pickImage}>
+            <Text style={styles.imageButtonText}>
+              Selecionar Imagem (opcional)
+            </Text>
+          </TouchableOpacity>
+        )}
 
-      {/* {imagem && (
-        <Image source={{ uri: imagem }} style={styles.imagePreview} />
-      )} */}
+        {imagem && (
+          <Image source={{ uri: imagem }} style={styles.imagePreview} />
+        )}
 
-      <Button title="Publicar" style={[styles.button]} onPress={handleSubmit} />
+        <Button title="Publicar" onPress={handleSubmit} />
       </View>
     </View>
   );
@@ -100,70 +140,74 @@ const styles = StyleSheet.create({
   container: {
     padding: 30,
     flex: 2,
-    backgroundColor: '#f8d3cf',
-    justifyContent: 'center', // Centraliza verticalmente
-    alignItems: 'center',     // Centraliza horizontalmente
+    backgroundColor: "#f8d3cf",
+    justifyContent: "center",
+    alignItems: "center",
   },
   box: {
-    width: '100%',
-    borderColor: '#fe9588',
-    backgroundColor: '#fe9588',
+    width: "100%",
+    borderColor: "#fe9588",
+    backgroundColor: "#fe9588",
     padding: 20,
     borderRadius: 10,
-    // Shadow para Android
     elevation: 5,
-    // Shadow para iOS
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
   },
   label: {
-    fontWeight: 'bold',
-    color: '#cd5c5c',
+    fontWeight: "bold",
+    color: "#cd5c5c",
     marginTop: 10,
     marginBottom: 4,
   },
   input: {
     borderWidth: 0.2,
-    borderColor: '#cd5c5c',
+    borderColor: "#cd5c5c",
     paddingHorizontal: 10,
     paddingVertical: 8,
     fontSize: 16,
-    backgroundColor: '#fff',
-    elevation: 5, // Sombra para Android
-    shadowColor: '#000', // Cor da sombra
-    shadowOffset: { width: 0, height: 2 }, // Distância da sombra
-    shadowOpacity: 0.2, // Opacidade da sombra
-    shadowRadius: 5, // Raio da sombra
+    backgroundColor: "#fff",
+    elevation: 5,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 5,
     borderRadius: 8,
-    
   },
   imageButton: {
-    backgroundColor: '#e35040',
+    backgroundColor: "#e35040",
     borderRadius: 8,
     padding: 10,
     marginVertical: 15,
-    alignItems: 'center',
-    elevation: 5, // Sombra para Android
-    shadowColor: '#000', // Cor da sombra
-    shadowOffset: { width: 0, height: 2 }, // Distância da sombra
-    shadowOpacity: 0.2, // Opacidade da sombra
-    shadowRadius: 4, // Raio da sombra
+    alignItems: "center",
+    elevation: 5,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
   },
   imageButtonText: {
-    color: 'white',
-    fontWeight: 'bold',
-    
+    color: "white",
+    fontWeight: "bold",
+  },
+  webInputWrapper: {
+    backgroundColor: "#fff",
+    padding: 10,
+    marginVertical: 15,
+    borderRadius: 8,
+    borderColor: "#cd5c5c",
+    borderWidth: 0.2,
   },
   imagePreview: {
-    width: '100%',
+    width: "100%",
     height: 200,
     marginBottom: 10,
     borderRadius: 10,
   },
   button: {
     borderRadius: 8,
-    width: '50%',
-  }
+    width: "50%",
+  },
 });

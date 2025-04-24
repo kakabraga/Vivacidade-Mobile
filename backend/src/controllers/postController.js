@@ -11,36 +11,30 @@ const getPosts = (req, res) => {
 };
 
 const createPost = (req, res) => {
-  // Desestruturando os dados do corpo da requisição
   const { title, content } = req.body;
   const userId = req.user.id;   
-  // Verificando se o título e conteúdo foram fornecidos
+  const image = req.file ? req.file.path : "uploads/image.png";
+
+  // Validações
   if (!title) {
     return res.status(400).json({ error: 'Título é obrigatório' });
   }
   if (!content) {
     return res.status(400).json({ error: 'Conteúdo é obrigatório' });
   }
-
-  // Verificando se o usuário está autenticado e se o id do usuário está presente
-//   const userId = req.user && req.user.id;  // O id do usuário autenticado
-
   if (!userId) {
     return res.status(401).json({ error: 'Usuário não autenticado' });
   }
 
-  // Criação do post no banco de dados
-  Post.createPost(title, content, userId, (err, result) => {
+  // Criação do post no banco de dados, agora enviando também a imagem
+  Post.createPost(title, content, userId, image, (err, result) => {
     if (err) {
       return res.status(500).json({ error: 'Erro ao criar post', err });
     }
 
-    // Retorno de sucesso
     res.status(201).json({ message: 'Post criado com sucesso!' });
   });
 };
-
-module.exports = { createPost };
 
 // Atualizar post
 const updatePost = (req, res) => {
