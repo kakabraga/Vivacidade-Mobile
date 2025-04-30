@@ -9,6 +9,7 @@ app.use(express.json());
 
 app.use('/api/posts', postRoutes);
 app.use('/api/users', usersRoutes);
+app.use('/uploads', express.static('uploads'));
 // Em backend/index.js ou app.js, onde estão suas rotas:
   
 const PORT = 3000;

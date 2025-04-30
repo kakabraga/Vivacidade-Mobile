@@ -1,82 +1,73 @@
-const React = require('react');
-const { createContext, useContext, useEffect, useState } = React;
+// app/context/auth.js
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import api from '../global/services/api';
-import { jwtDecode } from "jwt-decode";
-import AsyncStorage from '@react-native-async-storage/async-storage'; // Adicione esta linha no começo do arquivo
+import { jwtDecode } from 'jwt-decode';
 
 // Cria o contexto de autenticação
 export const AuthContext = createContext();
 
-// Provedor do contexto
 export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const loadToken = async () => {
-      const token = await AsyncStorage.getItem('token');
-      if (token) {
-        // Define o header Authorization para futuras requisições
-        api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-        
-        // Decodifica o token para obter os dados do usuário (certifique-se que o token contém o campo "id")
-        try {
-          console.log('Token recebido:', token);
+    async function loadStorageData() {
+      try {
+        const token = await AsyncStorage.getItem('token');
+
+        if (token) {
+          api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
           const decodedUser = jwtDecode(token);
-          console.log('Usuário decodificado:', decodedUser);
-          
-          setUser(decodedUser);  // Salva o usuário no contexto
-          setIsAuthenticated(true);  // Marca como autenticado
-          
-          // Opcional: Também podemos armazenar o usuário no AsyncStorage para facilitar o acesso após reinicialização
-          await AsyncStorage.setItem('user', JSON.stringify(decodedUser));
-        } catch (error) {
-          console.error('Erro ao decodificar token:', error);
-          setIsAuthenticated(false);
+
+          setUser(decodedUser);
+          setIsAuthenticated(true);
         }
-      } else {
-        // Se não houver token, marca como não autenticado
-        setIsAuthenticated(false);
+      } catch (error) {
+        console.error('Erro ao carregar dados do storage:', error);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);  // Finaliza o carregamento
-    };
-  
-    loadToken();  // Chama a função para carregar o token e o usuário
-  
+    }
+
+    loadStorageData();
   }, []);
+
   const login = async (token) => {
-    await AsyncStorage.setItem('token', token);
-    api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
     try {
-      const decodedUser = jwt_decode(token);
-      await AsyncStorage.setItem('user', JSON.stringify(decodedUser)); // 👈 adiciona isso
+      await AsyncStorage.setItem('token', token);
+      api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      const decodedUser = jwtDecode(token);
+
       setUser(decodedUser);
       setIsAuthenticated(true);
     } catch (error) {
-      console.error('Erro ao decodificar token:', error);
+      console.error('Erro no login:', error);
       setIsAuthenticated(false);
     }
   };
-  
 
   const logout = async () => {
-    await AsyncStorage.removeItem('token');
-    delete api.defaults.headers.common['Authorization'];
-    setIsAuthenticated(false);
-    setUser(null);
+    try {
+      await AsyncStorage.removeItem('token');
+      delete api.defaults.headers.common['Authorization'];
+      setUser(null);
+      setIsAuthenticated(false);
+    } catch (error) {
+      console.error('Erro ao fazer logout:', error);
+    }
   };
 
-  if (loading) return null; // Pode retornar um indicador de loading
+  if (loading) return null; // Pode colocar um spinner de loading futuramente
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, user, login, logout, loading }}>
+    <AuthContext.Provider value={{ isAuthenticated, user, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
 };
 
-// Hook para usar o contexto
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
@@ -84,3 +75,4 @@ export const useAuth = () => {
   }
   return context;
 };
+ 

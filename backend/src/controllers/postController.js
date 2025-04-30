@@ -10,6 +10,14 @@ const getPosts = (req, res) => {
     });
 };
 
+const getLastPosts = (req, res) => {
+    Post.getLastPosts((err, results) => {
+        if (err) {
+            return res.status(500).json({error: 'Erro ao buscar posts'});
+        }
+        res.json(results);
+    })
+}
 const createPost = (req, res) => {
   const { title, content } = req.body;
   const userId = req.user.id;   
@@ -75,5 +83,14 @@ const listaPostPorId = (req, res) => {
     });
 }
 
+const getPostsPorUser = (req, res) => {
+    const {id} = req.params;
+    Post.getPostsPorUser (id, (err, result) => {
+        if (err) {
+            return res.status(500).json({error: 'Erro ao buscar post'})
+        }
+        res.json({ post: result });
+    });
+}
 
-module.exports = { getPosts, createPost, updatePost, deletePost, listaPostPorId };
+module.exports = { getPosts, createPost, updatePost, deletePost, listaPostPorId, getLastPosts, getPostsPorUser };

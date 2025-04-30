@@ -1,56 +1,78 @@
-// Perfil.js
 import React from 'react';
-import { View, Text, StyleSheet, Image } from 'react-native';
+import { View, Text, Image, Button, StyleSheet, TouchableOpacity } from 'react-native';
+import { useAuth } from '../context/auth'; 
+import image from '../../backend/src/uploads/image.png'
+export default function Profile({ navigation }) {
+  const { user, logout } = useAuth();
 
-const Perfil = () => {
+  const handleLogout = () => {
+    logout();
+  };
+
   return (
     <View style={styles.container}>
-      <Image
-        style={styles.avatar}
-        source={{ uri: 'https://www.example.com/your-avatar.jpg' }} // Substitua pela URL ou caminho da imagem
+      <Image 
+        source={{ uri: user?.photo || 'https://imgur.com/gallery/default-profile-picture-H7Olo4D' }} 
+        style={styles.avatar} 
       />
-      <Text style={styles.name}>Nome do Usuário</Text>
-      <Text style={styles.email}>email@exemplo.com</Text>
-      <View style={styles.infoContainer}>
-        <Text style={styles.infoText}>Idade: 60 anos</Text>
-        <Text style={styles.infoText}>Localização: São Paulo, SP</Text>
-      </View>
+      <Text style={styles.name}>{user?.name || 'Usuário'}</Text>
+      <Text style={styles.email}>{user?.email || 'email@exemplo.com'}</Text>
+
+      <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+        <Text style={styles.logoutButtonText}>Sair</Text>
+      </TouchableOpacity>
     </View>
   );
-};
-
+}
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
+    backgroundColor: '#f8d3cf', // Cor de fundo suave
     alignItems: 'center',
-    backgroundColor: '#f2f2f2',
+    justifyContent: 'flex-start', // Alinhamento para o topo
     padding: 20,
+    paddingBottom: 70
   },
   avatar: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
+    width: 120,
+    height: 120,
+    borderRadius: 60,
     marginBottom: 20,
+    borderWidth: 3, // Aumenta a largura da borda
+    borderColor: '#fe9588', // Cor da borda
+    shadowColor: '#000', // Sombra para profundidade
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 5, // Sombra para Android
   },
   name: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 10,
+    fontSize: 26, // Aumenta o tamanho da fonte
+    fontWeight: '700', // Peso da fonte mais forte
+    color: '#cd5c5c', // Cor do texto
+    marginBottom: 8,
   },
   email: {
-    fontSize: 16,
-    color: '#777',
-    marginBottom: 20,
+    fontSize: 18, // Aumenta o tamanho da fonte
+    color: '#555', // Cor do texto mais escura
+    marginBottom: 30,
   },
-  infoContainer: {
-    marginTop: 20,
+  logoutButton: {
+    backgroundColor: '#e35040', // Cor de fundo do botão
+    paddingVertical: 12,
+    paddingHorizontal: 30,
+    borderRadius: 10, // Bordas mais arredondadas
+    marginTop: 20, // Espaçamento superior
+    shadowColor: '#000', // Sombra para profundidade
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3, // Sombra para Android
   },
-  infoText: {
-    fontSize: 16,
-    color: '#555',
-    marginBottom: 5,
+  logoutButtonText: {
+    color: '#fff', // Cor do texto do botão
+    fontSize: 18, // Aumenta o tamanho da fonte
+    fontWeight: 'bold', // Peso da fonte
+    textAlign: 'center', // Centraliza o texto
   },
 });
-
-export default Perfil;

@@ -10,7 +10,12 @@ const getPorId = (id, callback) => {
         callback(err, result);
     });
 };
-
+ const getPostsPorUser = (id, callback) => {
+    const sql = "SELECT * FROM posts WHERE userId= ?"; 
+    db.query(sql, [id], (err, result) => {
+        callback(err, result);
+    });
+ }
 // Criar um post
 const createPost = (title, content, userId, imagePath, callback) => {
     const sql = 'INSERT INTO posts (title, content, userId, image) VALUES (?, ?, ?, ?)';
@@ -29,4 +34,8 @@ const deletePost = (id, callback) => {
     db.query(sql, [id], callback);
 };
 
-module.exports = { getAllPosts, createPost, updatePost, deletePost, getPorId };
+const getLastPosts = (callback) => {
+    const sql = 'SELECT * FROM posts ORDER BY ID DESC LIMIT 8';
+    db.query(sql, callback);
+}
+module.exports = { getAllPosts, createPost, updatePost, deletePost, getPorId, getLastPosts, getPostsPorUser };

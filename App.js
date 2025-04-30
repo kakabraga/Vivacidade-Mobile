@@ -3,7 +3,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
-import { AuthProvider } from './app/context/auth'; // Importando o AuthProvider
+import { AuthProvider, useAuth } from './app/context/auth';
 import Login from './app/login/Login';
 import Register from './app/login/Register';
 import Home from './app/home/Home';
@@ -14,13 +14,13 @@ import Post from './app/forms/Post';
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
-// Tela placeholder para exemplo
+// Tela placeholder
 function Perfil() {
-  return <Profile />; // Usando o componente Profile aqui
+  return <Profile />;
 }
 
 function PostForm() {
-  return <Post />; // Usando o componente PostContent aqui
+  return <Post />;
 }
 
 function HomeTabNavigator() {
@@ -69,16 +69,34 @@ function HomeTabNavigator() {
   );
 }
 
-export default function App() {
+// Este é o "App" real, agora pode usar useAuth
+function AppRoutes() {
+  const { user } = useAuth();
+
   return (
-    <AuthProvider> {/* Envolvendo a navegação com AuthProvider */}
-      <NavigationContainer>
-        <Stack.Navigator screenOptions={{ headerShown: false }}>
+    <NavigationContainer>
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      {user ? (
+        // Usuário logado: mostrar as abas do app
+        // navigation.navigate('Home')
+        <Stack.Screen name="HomeTabs" component={HomeTabNavigator} />
+      ) : (
+        // Usuário não logado: mostrar o login
+        <>
           <Stack.Screen name="Login" component={Login} />
           <Stack.Screen name="Register" component={Register} />
-          <Stack.Screen name="HomeTabs" component={HomeTabNavigator} />
-        </Stack.Navigator>
-      </NavigationContainer>
+        </>
+      )}
+    </Stack.Navigator>
+  </NavigationContainer>
+  );
+}
+
+// Envolvemos o AppRoutes dentro do AuthProvider
+export default function App() {
+  return (
+    <AuthProvider>
+      <AppRoutes />
     </AuthProvider>
   );
 }
