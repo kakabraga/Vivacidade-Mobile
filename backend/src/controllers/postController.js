@@ -70,18 +70,18 @@ const deletePost = (req, res) => {
 };
 
 const listaPostPorId = (req, res) => {
-    const {id} = req.params;
-    Post.getPorId(id, (err, result) => {
+    const { id } = req.params;
+    Post.getPorId(id, (err, post) => {
         if (err) {
             return res.status(500).json({ error: 'Erro ao buscar post' });
         }
-        if (result.length === 0) {  // Verifica se o post foi encontrado
+        if (!post) {
             return res.status(404).json({ message: 'Post não encontrado' });
         }
 
-        res.json({ post: result });
+        res.json(post); // retorna o post diretamente como objeto
     });
-}
+};
 
 const getPostsPorUser = (req, res) => {
     const {id} = req.params;
@@ -92,5 +92,42 @@ const getPostsPorUser = (req, res) => {
         res.json({ post: result });
     });
 }
+const createComennt = (req, res) => {
+    const { id_post } = req.params;
+    const { id_user, content } = req.body;
 
-module.exports = { getPosts, createPost, updatePost, deletePost, listaPostPorId, getLastPosts, getPostsPorUser };
+  if (!id_user || !id_post || !content) {
+    return res.status(400).json({ error: 'Todos os campos são obrigatórios.' });
+  }
+
+  Post.AddComennt( id_user, id_post, content , (err, resultado) => {
+    if (err) {
+      console.error('Erro ao adicionar comentário:', err);
+      return res.status(500).json({ error: 'Erro ao adicionar comentário.' });
+    }
+
+    res.status(201).json({ message: 'Comentário adicionado com sucesso!', id: resultado.insertId });
+  });
+};
+
+const getCommentsPorPost = (req, res) => {
+    const { id_post } = req.params;
+
+    // Chama a função do model para buscar os comentários
+    Post.getCommentsPorPost(id_post, (err, results) => {
+        if (err) {
+            // Se ocorrer erro na consulta
+            return res.status(500).json({ error: 'Erro ao buscar comentários.' });
+        }
+
+        // Se não houver resultados, retorna array vazio (é melhor que erro)
+        if (!results || results.length === 0) {
+            return res.status(200).json([]); // Evita erro e permite controle no front-end
+        }
+
+        // Se encontrar, envia os comentários
+        res.json(results);
+    });
+};
+
+module.exports = { getPosts, createPost, updatePost, deletePost, listaPostPorId, getLastPosts, getPostsPorUser, createComennt, getCommentsPorPost };

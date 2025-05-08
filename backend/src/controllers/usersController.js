@@ -74,7 +74,7 @@ const deleteUser = (req, res) => {
 };
 
 const getByEmail = (req, res) => {
-    const { email } = req.params;
+    const { email } = req.params;                                               
     if (!email) {
         return res.status(400).json({error: "Email é obrigatório"});
     }
@@ -87,7 +87,20 @@ const getByEmail = (req, res) => {
         res.json(results);
     })
 }
+const getUserById = (req, res) => {
+    const { id } = req.params;
 
+    if(!id) {
+        return res.status(400).json({error: "Id é obrigatório"});
+    }
+
+    Users.getUserById (id, (err, results) => {
+        if (err) {
+            return res.status(500).json({ error: 'Error ao selecionar usuario'});
+        }
+        res.json(results);
+    })
+}
 const Login = (req, res) => {
     const { email, senha } = req.body;
   
@@ -135,4 +148,4 @@ const Login = (req, res) => {
     });
   };
 
-module.exports = { getUsers, createUsers, updateUser, deleteUser, getByEmail, Login};
+module.exports = { getUsers, createUsers, updateUser, deleteUser, getByEmail, Login, getUserById};

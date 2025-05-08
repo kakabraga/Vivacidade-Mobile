@@ -3,13 +3,15 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { AuthProvider, useAuth } from './app/context/auth';
 import Login from './app/login/Login';
 import Register from './app/login/Register';
 import Home from './app/home/Home';
 import Profile from './app/profile/Perfil';
 import Post from './app/forms/Post';
-
+import PostDetails from './app/home/PostDetails';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 // Definindo as navegações
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -65,38 +67,42 @@ function HomeTabNavigator() {
       <Tab.Screen name="Home" component={Home} />
       <Tab.Screen name="Perfil" component={Perfil} />
       <Tab.Screen name="Post" component={PostForm} />
+      <Tab.Screen name="PostDetails" component={PostDetails} />
     </Tab.Navigator>
   );
 }
 
-// Este é o "App" real, agora pode usar useAuth
 function AppRoutes() {
   const { user } = useAuth();
 
   return (
-    <NavigationContainer>
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
-      {user ? (
-        // Usuário logado: mostrar as abas do app
-        // navigation.navigate('Home')
-        <Stack.Screen name="HomeTabs" component={HomeTabNavigator} />
-      ) : (
-        // Usuário não logado: mostrar o login
-        <>
-          <Stack.Screen name="Login" component={Login} />
-          <Stack.Screen name="Register" component={Register} />
-        </>
-      )}
-    </Stack.Navigator>
-  </NavigationContainer>
+    <SafeAreaView style={{ flex: 1 }}>
+      <NavigationContainer>
+        <Stack.Navigator screenOptions={{ headerShown: false }}>
+          {user ? (
+            // Usuário logado: mostrar as abas do app
+            <Stack.Screen name="HomeTabs" component={HomeTabNavigator} />
+          ) : (
+            // Usuário não logado: mostrar o login
+            <>
+              <Stack.Screen name="Login" component={Login} />
+              <Stack.Screen name="Register" component={Register} />
+            </>
+          )}
+          {/* Tela de detalhes do post */}
+          <Stack.Screen name="PostDetails" component={PostDetails} />
+        </Stack.Navigator>
+      </NavigationContainer>
+    </SafeAreaView>
   );
 }
 
-// Envolvemos o AppRoutes dentro do AuthProvider
 export default function App() {
   return (
-    <AuthProvider>
-      <AppRoutes />
-    </AuthProvider>
+    <SafeAreaProvider>
+      <AuthProvider>
+        <AppRoutes />
+      </AuthProvider>
+    </SafeAreaProvider>
   );
 }

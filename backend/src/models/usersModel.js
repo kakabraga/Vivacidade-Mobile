@@ -4,6 +4,11 @@ const bcrypt = require('bcrypt');
 const getAllUsers = (callback) => {
   db.query("SELECT * FROM users", callback);
 };
+
+const getUserById = (id, callback) => {
+  const sql = ("SELECT nome, email FROM users where id=?");
+  db.query(sql, [id], callback);
+}
 const createUsers =  async (nome, email, senha, callback) => {
   const sql = "INSERT INTO users (nome, email, senha) VALUES (?, ?, ?)";
   const senha_hash = await bcrypt.hash(senha, 10);
@@ -25,4 +30,4 @@ const getByEmail = (email, callback) => {
     callback(err, result);
   });
 }
-module.exports = { getAllUsers, createUsers, updateUser, deleteUser, getByEmail};
+module.exports = { getAllUsers, createUsers, updateUser, deleteUser, getByEmail, getUserById};

@@ -4,6 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import api from '../global/services/api';
 import { jwtDecode } from 'jwt-decode';
 
+
 // Cria o contexto de autenticação
 export const AuthContext = createContext();
 

@@ -13,12 +13,15 @@ import {
 import axios from 'axios';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native'; // Importa o hook de navegação
 
 export default function Home() {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  
+  const navigation = useNavigation(); // Inicia o hook de navegação
 
   const fetchPostsLastPosts = async () => {
     try {
@@ -53,24 +56,30 @@ export default function Home() {
     fetchPostsLastPosts();
   }, []);
 
-  // Função para formatar a data e extrair o horário
   const formatTime = (dateString) => {
     const date = new Date(dateString);
-    const hours = date.getHours().toString().padStart(2, '0'); // Adiciona zero à esquerda se necessário
-    const minutes = date.getMinutes().toString().padStart(2, '0'); // Adiciona zero à esquerda se necessário
-    return `${hours}:${minutes}`; // Retorna o horário no formato HH:MM
+    const hours = date.getHours().toString().padStart(2, '0');
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    return `${hours}:${minutes}`;
+  };
+
+  const handlePostPress = (id) => {
+    // Navega para a tela de detalhes, passando o id do post
+    navigation.navigate('PostDetails', { postId: id });
   };
 
   const renderItem = ({ item }) => (
     <View style={styles.card}>
-      <Image
-        source={{ uri: `http://192.168.0.249:3000/${item.image}` }}
-        style={styles.image}
-        resizeMode="cover"
-      />
-      <Text style={styles.title}>{item.title}</Text>
-      <Text style={styles.content}>{item.content}</Text>
-      <Text style={styles.time}>Postado às: {formatTime(item.create_at)}</Text> {/* Exibe o horário formatado */}
+      <TouchableOpacity onPress={() => handlePostPress(item.id)}>
+        <Image
+          source={{ uri: `http://192.168.0.249:3000/${item.image}` }}
+          style={styles.image}
+          resizeMode="cover"
+        />
+        <Text style={styles.title}>{item.title}</Text>
+        <Text style={styles.content}>{item.content}</Text>
+        <Text style={styles.time}>Postado às: {formatTime(item.create_at)}</Text>
+      </TouchableOpacity>
     </View>
   );
 
@@ -128,8 +137,8 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 4,
     elevation: 5,
-    flexDirection: 'column', // Organiza os elementos em coluna
-    justifyContent: 'space-between', // Espaça os elementos para que o horário fique na parte inferior
+    flexDirection: 'column',
+    justifyContent: 'space-between',
   },
   image: {
     width: '100%',
@@ -145,19 +154,9 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginTop: 4,
   },
-  timeContainer: {
-    flexDirection: 'row', // Alinha o ícone e o texto do horário
-    alignItems: 'center', // Centraliza verticalmente
-    marginTop: 8, // Espaçamento superior
-  },
   time: {
     fontSize: 12,
-    color: '#555', // Cor mais suave
-    marginLeft: 4, // Espaçamento entre o ícone e o texto
-    fontWeight: '300', // Peso de fonte mais leve
-  },
-  timeIcon: {
-    marginRight: 4, // Espaçamento entre o ícone e o texto
+    color: '#555',
   },
   searchContainer: {
     flexDirection: 'row',
@@ -181,4 +180,3 @@ const styles = StyleSheet.create({
     paddingLeft: 8,
   },
 });
-
