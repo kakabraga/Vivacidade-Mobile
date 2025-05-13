@@ -9,6 +9,7 @@ import Login from './app/login/Login';
 import Register from './app/login/Register';
 import Home from './app/home/Home';
 import Profile from './app/profile/Perfil';
+import Profile_user from './app/profile/Profile';
 import Post from './app/forms/Post';
 import PostDetails from './app/home/PostDetails';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -17,10 +18,12 @@ const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
 // Tela placeholder
+function Perfile_user() {
+  return <Profile_user />;
+}
 function Perfil() {
   return <Profile />;
 }
-
 function PostForm() {
   return <Post />;
 }
@@ -66,6 +69,7 @@ function HomeTabNavigator() {
     >
       <Tab.Screen name="Home" component={Home} />
       <Tab.Screen name="Perfil" component={Perfil} />
+      <Tab.Screen name="Perfil_user" component={Perfile_user} />
       <Tab.Screen name="Post" component={PostForm} />
       <Tab.Screen name="PostDetails" component={PostDetails} />
     </Tab.Navigator>
@@ -91,6 +95,7 @@ function AppRoutes() {
           )}
           {/* Tela de detalhes do post */}
           <Stack.Screen name="PostDetails" component={PostDetails} />
+          <Stack.Screen name="Profie_user" component={Profile_user} />
         </Stack.Navigator>
       </NavigationContainer>
     </SafeAreaView>

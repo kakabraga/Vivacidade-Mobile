@@ -1,10 +1,9 @@
 import React from 'react';
-import { View, Text, Image, Button, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
 import { useAuth } from '../context/auth'; 
 import image from '../../backend/src/uploads/image.png'
 export default function Profile({ navigation }) {
   const { user, logout } = useAuth();
-
   const handleLogout = () => {
     logout();
   };
@@ -15,7 +14,7 @@ export default function Profile({ navigation }) {
         source={{ uri: user?.photo || 'https://imgur.com/gallery/default-profile-picture-H7Olo4D' }} 
         style={styles.avatar} 
       />
-      <Text style={styles.name}>{user?.name || 'Usuário'}</Text>
+      <Text style={styles.name}>{user?.nome || 'Usuário'}</Text>
       <Text style={styles.email}>{user?.email || 'email@exemplo.com'}</Text>
 
       <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>

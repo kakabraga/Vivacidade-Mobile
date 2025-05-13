@@ -13,14 +13,46 @@ import {
 import { useAuth } from "../context/auth";
 import api from "../global/services/api";
 import * as ImagePicker from "expo-image-picker";
+import { Video } from "expo-av";
+import { FlatList } from "react-native";
 
 export default function Post({ navigation }) {
   const [titulo, setTitulo] = useState("");
   const [conteudo, setConteudo] = useState("");
   const [imagem, setImagem] = useState(null);
-  const [imagemFile, setImagemFile] = useState(null); // para Web
+  const [imagemFile, setImagemFile] = useState(null);
+  const [video, setVideo] = useState(null);
+  const [videoFile, setVideoFile] = useState(null);
   const { user } = useAuth();
   const userId = user ? user.id : "500";
+
+  const mediaList = [];
+  if (imagem) mediaList.push({ type: "image", uri: imagem });
+  if (video) mediaList.push({ type: "video", uri: video });
+
+  const renderMediaItem = ({ item }) => {
+    if (item.type === "image") {
+      return (
+        <Image
+          source={{ uri: item.uri }}
+          style={styles.carouselMedia}
+          resizeMode="cover"
+        />
+      );
+    } else if (item.type === "video") {
+      return (
+        <Video
+          source={{ uri: item.uri }}
+          rate={1.0}
+          volume={1.0}
+          isMuted={false}
+          resizeMode="cover"
+          useNativeControls
+          style={styles.carouselMedia}
+        />
+      );
+    }
+  };
 
   const pickImage = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
@@ -32,6 +64,24 @@ export default function Post({ navigation }) {
 
     if (!result.canceled && result.assets?.length > 0) {
       setImagem(result.assets[0].uri);
+    }
+  };
+
+  const pickVideo = async () => {
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Videos,
+      allowsEditing: true,
+      quality: 1,
+    });
+
+    if (!result.canceled) {
+      const videoUri = result.assets[0].uri;
+      setVideo(videoUri);
+      setVideoFile({
+        uri: videoUri,
+        name: "video",
+        type: "video/mp4",
+      });
     }
   };
 
@@ -55,6 +105,15 @@ export default function Post({ navigation }) {
           name: `photo_${Date.now()}.jpg`,
         });
       }
+      if (Platform.OS === "web" && videoFile) {
+        formData.append("video", videoFile);
+      } else if (videoFile && Platform.OS !== "web") {
+        formData.append("video", {
+          uri: video,
+          type: "video/mp4",
+          name: `video_${Date.now()}.mp4`,
+        });
+      }
 
       const response = await api.post("/api/posts/create", formData, {
         headers: {
@@ -67,6 +126,8 @@ export default function Post({ navigation }) {
       setConteudo("");
       setImagem(null);
       setImagemFile(null);
+      setVideo(null);
+      setVideoFile(null);
     } catch (error) {
       console.error("Erro ao enviar post:", error);
       Alert.alert(
@@ -126,8 +187,46 @@ export default function Post({ navigation }) {
           </TouchableOpacity>
         )}
 
-        {imagem && (
-          <Image source={{ uri: imagem }} style={styles.imagePreview} />
+        {Platform.OS === "web" ? (
+          <View style={styles.imageButton}>
+            <Text
+              style={styles.imageButtonText}
+              onPress={() => document.getElementById("videoinput").click()}>
+              Selecionar Vídeo (opcional)
+            </Text>
+            <input
+              id="videoinput"
+              type="file"
+              accept="video/*"
+              style={{ display: "none" }}
+              onChange={(e) => {
+                const file_video = e.target.files[0];
+                if (file_video) {
+                  setVideo(URL.createObjectURL(file_video));
+                  setVideoFile(file_video);
+                }
+              }}
+            />
+          </View>
+        ) : (
+          <TouchableOpacity style={styles.imageButton} onPress={pickVideo}>
+            <Text style={styles.imageButtonText}>
+              Selecionar Vídeo (opcional)
+            </Text>
+          </TouchableOpacity>
+        )}
+
+        {/* Carrossel com imagem e vídeo */}
+        {mediaList.length > 0 && (
+          <FlatList
+            data={mediaList}
+            keyExtractor={(_, index) => index.toString()}
+            renderItem={renderMediaItem}
+            horizontal
+            pagingEnabled
+            showsHorizontalScrollIndicator={false}
+            style={{ marginVertical: 10 }}
+          />
         )}
 
         <Button title="Publicar" onPress={handleSubmit} />
@@ -206,8 +305,20 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     borderRadius: 10,
   },
+  VideoPreview: {
+    width: "100%",
+    height: 200,
+    marginBottom: 10,
+    borderRadius: 10,
+  },
   button: {
     borderRadius: 8,
     width: "50%",
+  },
+  carouselMedia: {
+    width: 300,
+    height: 200,
+    marginRight: 10,
+    borderRadius: 10,
   },
 });

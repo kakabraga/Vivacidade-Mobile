@@ -4,10 +4,14 @@ const { getPosts, createPost, updatePost, deletePost, listaPostPorId, getLastPos
  } = require('../controllers/postController');
 const authMiddleware  = require("../middlewares/auth");
 const upload = require('../middlewares/upload'); 
+const video = require('../middlewares/upload_video'); 
 const router = express.Router();
 
 router.get('/get', getPosts);          // Listar posts
-router.post('/create', authMiddleware, upload.single('image'), createPost);    // Criar post
+router.post('/create', authMiddleware, upload.fields([
+    { name: 'image', maxCount: 1 },
+    { name: 'video', maxCount: 1 },
+  ]), createPost);    // Criar post
 router.post('/addcomments/:id_post', createComennt);
 router.put('/update/:id', updatePost); // Atualizar post
 router.delete('/delete/:id', deletePost); // Deletar post

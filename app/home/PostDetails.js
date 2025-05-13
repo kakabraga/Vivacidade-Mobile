@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, Image, StyleSheet, ActivityIndicator} from "react-native";
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { View, Text, Image, StyleSheet, ActivityIndicator,   ScrollView, } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import CommentsSection from "./CommentsSection";
+import { Video } from "expo-av"; // Importação do componente Video
 import axios from "axios";
 
 const PostDetails = ({ route }) => {
@@ -37,41 +38,56 @@ const PostDetails = ({ route }) => {
   }
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#f8d3cf' }}>
-    <View style={styles.container}>
-      {post ? (
-        
-        <View style={styles.card}>
-          <Image
-            source={{ uri: `http://192.168.0.249:3000/${post.image}` }}
-            style={styles.image}
-          />
-          <Text style={styles.title}>{post.title}</Text>
-          <Text style={styles.content}>{post.content}</Text>
-          <Text style={styles.time}>Postado às: {post.create_at}</Text>
-        </View>
-      ) : (
-        <Text>Post não encontrado</Text>
-      )}
-      {post && <CommentsSection postId={post.id} />}
-    </View>
-      </SafeAreaView>
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#f8d3cf" }}>
+       <ScrollView>
+      <View style={styles.container}>
+        {post ? (
+          <View style={styles.card}>
+            {/* Exibição da imagem, se existir */}
+            {post.image && (
+              <Image
+                source={{ uri: `http://192.168.0.249:3000/${post.image}` }}
+                style={styles.image}
+              />
+            )}
 
+            {/* Exibição do vídeo, se existir */}
+            {post.video && (
+              <Video
+                source={{ uri: `http://192.168.0.249:3000/${post.video}` }}
+                style={styles.video}
+                useNativeControls
+                resizeMode="contain"
+                isLooping
+              />
+            )}
+
+            <Text style={styles.title}>{post.title}</Text>
+            <Text style={styles.content}>{post.content}</Text>
+            <Text style={styles.time}>Postado às: {post.create_at}</Text>
+          </View>
+        ) : (
+          <Text>Post não encontrado</Text>
+        )}
+        {post && <CommentsSection postId={post.id} />}
+      </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fffaf5',
+    backgroundColor: "#fffaf5",
     paddingHorizontal: 16,
     paddingTop: 20,
   },
   card: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderRadius: 20,
     padding: 16,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
@@ -79,27 +95,38 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   image: {
-    width: '100%',
+    width: "100%",
     height: 300,
     borderRadius: 16,
     marginBottom: 16,
   },
   title: {
     fontSize: 22,
-    fontWeight: '600',
-    color: '#333',
+    fontWeight: "600",
+    color: "#333",
     marginBottom: 10,
   },
   content: {
     fontSize: 16,
-    color: '#555',
+    color: "#555",
     lineHeight: 22,
     marginBottom: 12,
   },
   time: {
     fontSize: 13,
-    color: '#999',
-    textAlign: 'right',
+    color: "#999",
+    textAlign: "right",
+  },
+  video: {
+    width: "100%",
+    height: 200,
+    borderRadius: 8,
+    marginVertical: 10,
+  },
+  carouselItem: {
+    width: "100%",
+    height: 200,
+    borderRadius: 8,
   },
 });
 

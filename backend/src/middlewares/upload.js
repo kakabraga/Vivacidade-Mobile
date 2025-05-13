@@ -15,8 +15,8 @@ const storage = multer.diskStorage({
 
 // Configurando filtro de tipos permitidos (opcional, mas legal de ter)
 const fileFilter = (req, file, cb) => {
-  const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
-
+  const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'video/mp4'];
+ 
   if (allowedTypes.includes(file.mimetype)) {
     cb(null, true);
   } else {

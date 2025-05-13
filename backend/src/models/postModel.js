@@ -29,9 +29,9 @@ const AddComennt = ( id_user, id_post, content , callback) => {
     });
  }
 // Criar um post
-const createPost = (title, content, userId, imagePath, callback) => {
-    const sql = 'INSERT INTO posts (title, content, userId, image) VALUES (?, ?, ?, ?)';
-    db.query(sql, [title, content, userId, imagePath], callback);
+const createPost = (title, content, userId, imagePath, video, callback) => {
+    const sql = 'INSERT INTO posts (title, content, userId, image, video) VALUES (?, ?, ?, ?, ?)';
+    db.query(sql, [title, content, userId, imagePath, video], callback);
 };
 
 // Atualizar um post
@@ -52,7 +52,7 @@ const getLastPosts = (callback) => {
 };
 
 const getCommentsPorPost = (id_post, callback) => {
-    const sql = 'SELECT u.nome, u.id as user_id, c.content, c.comment_at, c.id_post, p.id FROM users as u, comments as c, posts as p  WHERE c.id_post = p.id AND p.id = ?';
+    const sql = 'SELECT u.nome, u.id as userId, c.id_user, c.id_post, c.content, c.comment_at, c.id FROM users as u, comments as c WHERE c.id_user = u.id AND c.id_post = ? ORDER BY c.id DESC';
     db.query(sql, [id_post], (err, result) => {
         callback(err, result);
     });

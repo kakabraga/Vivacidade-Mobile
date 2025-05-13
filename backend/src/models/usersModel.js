@@ -6,7 +6,7 @@ const getAllUsers = (callback) => {
 };
 
 const getUserById = (id, callback) => {
-  const sql = ("SELECT nome, email FROM users where id=?");
+  const sql = ("SELECT nome, email, id FROM users where id= ?");
   db.query(sql, [id], callback);
 }
 const createUsers =  async (nome, email, senha, callback) => {

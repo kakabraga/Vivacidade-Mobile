@@ -66,11 +66,13 @@ export default function Home() {
   const handlePostPress = (id) => {
     // Navega para a tela de detalhes, passando o id do post
     navigation.navigate('PostDetails', { postId: id });
+    {console.log(id)}
   };
 
   const renderItem = ({ item }) => (
     <View style={styles.card}>
       <TouchableOpacity onPress={() => handlePostPress(item.id)}>
+        
         <Image
           source={{ uri: `http://192.168.0.249:3000/${item.image}` }}
           style={styles.image}
