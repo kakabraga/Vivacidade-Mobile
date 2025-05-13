@@ -16,7 +16,6 @@ const getPorId = (id, callback) => {
         }
     });
 };
-
 const AddComennt = ( id_user, id_post, content , callback) => {
     const sql = 'INSERT INTO comments (id_user, id_post, content) VALUES (?, ?, ?)';
     db.query(sql, [id_user, id_post, content], callback);
@@ -27,7 +26,7 @@ const AddComennt = ( id_user, id_post, content , callback) => {
     db.query(sql, [id], (err, result) => {
         callback(err, result);
     });
- }
+ };
 // Criar um post
 const createPost = (title, content, userId, imagePath, video, callback) => {
     const sql = 'INSERT INTO posts (title, content, userId, image, video) VALUES (?, ?, ?, ?, ?)';
@@ -42,8 +41,15 @@ const updatePost = (id, title, content, image, callback) => {
 
 // Deletar um post
 const deletePost = (id, callback) => {
-    const sql = 'DELETE FROM posts WHERE id = ?';
-    db.query(sql, [id], callback);
+  const sqlDeleteComments = "DELETE FROM comments WHERE id_post = ?";
+  const sqlDeletePost = "DELETE FROM posts WHERE id = ?";
+
+  db.query(sqlDeleteComments, [id], (err) => {
+    if (err) return callback(err); // erro ao deletar comentários
+
+    // Só deleta o post se os comentários foram deletados com sucesso
+    db.query(sqlDeletePost, [id], callback);
+  });
 };
 
 const getLastPosts = (callback) => {

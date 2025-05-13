@@ -84,11 +84,11 @@ const listaPostPorId = (req, res) => {
 
 const getPostsPorUser = (req, res) => {
   const { id } = req.params;
-  Post.getPostsPorUser(id, (err, result) => {
+  Post.getPostsPorUser(id, (err, results) => {
     if (err) {
       return res.status(500).json({ error: "Erro ao buscar post" });
     }
-    res.json({ post: result });
+    res.json(results)
   });
 };
 const createComennt = (req, res) => {

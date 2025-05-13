@@ -17,6 +17,6 @@ router.put('/update/:id', updatePost); // Atualizar post
 router.delete('/delete/:id', deletePost); // Deletar post
 router.get('/getid/:id', listaPostPorId); // Obter post por ID
 router.get('/getLastPosts', getLastPosts); // Obter post por ID
-router.get('/getPostsPorUser/:id', getPostsPorUser);
+router.get('/getpostsporuser/:id', getPostsPorUser);
 router.get('/getComments/:id_post', getCommentsPorPost);
 module.exports = router;
