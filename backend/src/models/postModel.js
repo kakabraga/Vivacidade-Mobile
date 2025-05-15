@@ -33,10 +33,10 @@ const createPost = (title, content, userId, imagePath, video, callback) => {
     db.query(sql, [title, content, userId, imagePath, video], callback);
 };
 
-// Atualizar um post
-const updatePost = (id, title, content, image, callback) => {
-    const sql = 'UPDATE posts SET title = ?, content = ?, image = ? WHERE id = ?';
-    db.query(sql, [title, content, image, id], callback);
+// Atualizar um post 
+const updatePost = (id, title, content, callback) => {
+    const sql = 'UPDATE posts SET title = ?, content = ? WHERE id = ?';
+    db.query(sql, [title, content, id], callback);
 };
 
 // Deletar um post

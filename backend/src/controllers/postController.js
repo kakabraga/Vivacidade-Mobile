@@ -46,9 +46,9 @@ const video = req.files?.video?.[0]?.path || null;
 // Atualizar post
 const updatePost = (req, res) => {
   const { id } = req.params;
-  const { title, content, image } = req.body;
+  const { title, content } = req.body;
 
-  Post.updatePost(id, title, content, image, (err, result) => {
+  Post.updatePost(id, title, content, (err, result) => {
     if (err) {
       return res.status(500).json({ error: "Erro ao atualizar post" });
     }

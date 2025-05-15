@@ -13,7 +13,7 @@ import { useAuth } from "../context/auth";
 import { Ionicons } from "@expo/vector-icons";
 import axios from "axios";
 import { useNavigation } from "@react-navigation/native";
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView } from "react-native-safe-area-context";
 // Utilitário para formatar hora
 const formatTime = (dateString) => {
   const date = new Date(dateString);
@@ -33,10 +33,14 @@ export default function Profile() {
   };
   const handlePostPress = (id) => {
     // Navega para a tela de detalhes, passando o id do post
-    navigation.navigate("PostDetails", { postId: id });
+    navigation.navigate("PostDetails", { id: id });
     {
       console.log(id);
     }
+  };
+  const handleEditPress = (postData) => {
+    navigation.navigate("EditPost", { postData });
+    console.log("Editando post:", postData.id);
   };
 
   const handleDeletePost = async (postId) => {
@@ -50,7 +54,6 @@ export default function Profile() {
       console.error("Erro ao deletar post:", error);
     }
   };
-
   const fetchPosts = async () => {
     try {
       const response = await axios.get(
@@ -102,77 +105,81 @@ export default function Profile() {
   );
 
   const renderItem = ({ item }) => (
-  <View style={styles.card}>
-    <TouchableOpacity onPress={() => handlePostPress(item.id)}>
-      <Image
-        source={{ uri: `http://192.168.0.249:3000/${item.image}` }}
-        style={styles.image}
-        resizeMode="cover"
-      />
-      <Text style={styles.title}>{item.title}</Text>
-      <Text style={styles.content}>{item.content}</Text>
-      <Text style={styles.time}>
-        Postado às: {formatTime(item.create_at)}
-      </Text>
-    </TouchableOpacity>
-
-    {/* Ícone de deletar visível somente para o criador */}
-    {item.userId === user.id && (
-      <TouchableOpacity
-        onPress={() => handleDeletePost(item.id)}
-        style={styles.deleteButton}
-      >
-        <Ionicons name="trash" size={24} color="red" />
+    <View style={styles.card}>
+      <TouchableOpacity onPress={() => handlePostPress(item.id)}>
+        <Image
+          source={{ uri: `http://192.168.0.249:3000/${item.image}` }}
+          style={styles.image}
+          resizeMode="cover"
+        />
+        <Text style={styles.title}>{item.title}</Text>
+        <Text style={styles.content}>{item.content}</Text>
+        <Text style={styles.time}>
+          Postado às: {formatTime(item.create_at)}
+        </Text>
       </TouchableOpacity>
-    )}
-  </View>
-);
 
+      {/* Ícone de deletar visível somente para o criador */}
+      {item.userId === user.id && (
+        <TouchableOpacity
+          onPress={() => handleDeletePost(item.id)}
+          style={styles.deleteButton}>
+          <Ionicons name="trash" size={24} color="red" />
+        </TouchableOpacity>
+      )}
+      {item.userId === user.id && (
+        <TouchableOpacity
+          onPress={() => handleEditPress(item)}
+          style={styles.editButton}>
+          <Ionicons name="pencil" size={24} color="red" />
+        </TouchableOpacity>
+      )}
+    </View>
+  );
 
   return (
-    <SafeAreaView style={styles.wrapper} edges={['top', 'left', 'right']}>
-    <View style={styles.wrapper}>
+    <SafeAreaView style={styles.wrapper} edges={["top", "left", "right"]}>
+      <View style={styles.wrapper}>
+        {/* Cabeçalho do usuário */}
+        {renderUserHeader()}
 
-      {/* Cabeçalho do usuário */}
-      {renderUserHeader()}
-
-      {/* Campo de busca */}
-      <View style={styles.searchContainer}>
-        <Text style={styles.titleSearch}>Buscar posts:</Text>
-        <TextInput
-          style={styles.searchInput} // Corrigido: estava usando styles.searchContainer em vez de searchInput
-          placeholder="Buscar posts..."
-          placeholderTextColor="#999"
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-        />
-        {/* Ícone de limpar busca */}
-        {searchQuery.length > 0 && (
-          <TouchableOpacity
-            onPress={() => setSearchQuery("")}
-            style={styles.clearButton}>
-            {/* Certifique-se de importar Ionicons: import { Ionicons } from '@expo/vector-icons' */}
-            <Ionicons name="close-circle" size={20} color="#888" />
-          </TouchableOpacity>
-        )}
-      </View>
-      {/* Lista de posts */}
-
-      <FlatList
-        data={filteredPosts}
-        renderItem={renderItem}
-        keyExtractor={(item) => item.id.toString()}
-        numColumns={2}
-        contentContainerStyle={styles.postsContainer}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            colors={["#ff9f6e"]}
+        {/* Campo de busca */}
+        <View style={styles.searchContainer}>
+          <Text style={styles.titleSearch}>Buscar posts:</Text>
+          <TextInput
+            style={styles.searchInput} // Corrigido: estava usando styles.searchContainer em vez de searchInput
+            placeholder="Buscar posts..."
+            placeholderTextColor="#999"
+            value={searchQuery}
+            onChangeText={setSearchQuery}
           />
-        }
-      />
-    </View>
+          {/* Ícone de limpar busca */}
+          {searchQuery.length > 0 && (
+            <TouchableOpacity
+              onPress={() => setSearchQuery("")}
+              style={styles.clearButton}>
+              {/* Certifique-se de importar Ionicons: import { Ionicons } from '@expo/vector-icons' */}
+              <Ionicons name="close-circle" size={20} color="#888" />
+            </TouchableOpacity>
+          )}
+        </View>
+        {/* Lista de posts */}
+
+        <FlatList
+          data={filteredPosts}
+          renderItem={renderItem}
+          keyExtractor={(item) => item.id.toString()}
+          numColumns={2}
+          contentContainerStyle={styles.postsContainer}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={["#ff9f6e"]}
+            />
+          }
+        />
+      </View>
     </SafeAreaView>
   );
 }
@@ -307,13 +314,23 @@ const styles = StyleSheet.create({
     fontSize: 14,
     paddingVertical: 10,
   },
-  deleteButton: {
-  position: 'absolute',
-  top: 8,
+deleteButton: {
+  position: "absolute",
+  top: 8, // Posição superior
   right: 8,
-  backgroundColor: 'rgba(255,255,255,0.8)',
+  backgroundColor: "rgba(255,255,255,0.8)",
   borderRadius: 20,
   padding: 4,
   zIndex: 1,
 },
+editButton: {
+  position: "absolute",
+  top: 44, // Aumentado para que fique abaixo do botão de deletar
+  right: 8,
+  backgroundColor: "rgba(255,255,255,0.8)",
+  borderRadius: 20,
+  padding: 4,
+  zIndex: 1,
+},
+
 });

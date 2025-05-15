@@ -113,7 +113,7 @@ export default function Home() {
         data={filteredPosts}
         renderItem={renderItem}
         keyExtractor={item => item.id.toString()}
-        numColumns={2}
+        numColumns={1}
         contentContainerStyle={styles.container}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#ff9f6e']} />

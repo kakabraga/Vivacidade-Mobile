@@ -12,6 +12,7 @@ import Profile from './app/profile/Perfil';
 import Profile_user from './app/profile/Profile';
 import Post from './app/forms/Post';
 import PostDetails from './app/home/PostDetails';
+import EditPost from './app/home/EditPost';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 // Definindo as navegações
 const Stack = createNativeStackNavigator();
@@ -69,9 +70,7 @@ function HomeTabNavigator() {
     >
       <Tab.Screen name="Home" component={Home} />
       <Tab.Screen name="Perfil" component={Perfil} />
-      <Tab.Screen name="Perfil_user" component={Perfile_user} />
       <Tab.Screen name="Post" component={PostForm} />
-      <Tab.Screen name="PostDetails" component={PostDetails} />
     </Tab.Navigator>
   );
 }
@@ -96,6 +95,7 @@ function AppRoutes() {
           {/* Tela de detalhes do post */}
           <Stack.Screen name="PostDetails" component={PostDetails} />
           <Stack.Screen name="Profie_user" component={Profile_user} />
+          <Stack.Screen name="EditPost" component={EditPost} />
         </Stack.Navigator>
       </NavigationContainer>
     </SafeAreaView>

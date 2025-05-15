@@ -38,7 +38,7 @@ const PostDetails = ({ route }) => {
   }
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "#f8d3cf" }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
        <ScrollView>
       <View style={styles.container}>
         {post ? (
@@ -79,7 +79,7 @@ const PostDetails = ({ route }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fffaf5",
+    backgroundColor: "#fff",
     paddingHorizontal: 16,
     paddingTop: 20,
   },

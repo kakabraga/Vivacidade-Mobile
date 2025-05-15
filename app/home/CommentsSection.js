@@ -23,6 +23,8 @@ const CommentsSection = ({ postId }) => {
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState("");
   const [refreshing, setRefreshing] = useState(false);
+  const [loading, setLoading] = useState(true);
+
   const navigation = useNavigation(); 
 
   const formatTime = (dateString) => {
@@ -166,7 +168,7 @@ const CommentsSection = ({ postId }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f5f5f5",
+    backgroundColor: "#fff",
   },
   commentsList: {
     flex: 1,
