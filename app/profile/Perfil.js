@@ -26,16 +26,16 @@ export default function Profile() {
   const { user, logout } = useAuth();
   const [posts, setPosts] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
-  const [searchQuery, setSearchQuery] = useState(""); // 🔧 Corrigido de 'searchTerm' para 'searchQuery' para manter consistência
+  const [searchQuery, setSearchQuery] = useState("");
   const navigation = useNavigation();
   const handleLogout = () => {
     logout();
   };
   const handlePostPress = (id) => {
     // Navega para a tela de detalhes, passando o id do post
-    navigation.navigate("PostDetails", { id: id });
+    navigation.navigate("PostDetails", { postId: id });
     {
-      console.log(id);
+      console.log("id do posts: " + id);
     }
   };
   const handleEditPress = (postData) => {
@@ -129,7 +129,7 @@ export default function Profile() {
       )}
       {item.userId === user.id && (
         <TouchableOpacity
-          onPress={() => handleEditPress(item)}
+          onPress={() => handleEditPress(item.id)}
           style={styles.editButton}>
           <Ionicons name="pencil" size={24} color="red" />
         </TouchableOpacity>

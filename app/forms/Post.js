@@ -11,6 +11,7 @@ import {
   Platform,
 } from "react-native";
 import { useAuth } from "../context/auth";
+import { SafeAreaView } from 'react-native-safe-area-context';
 import api from "../global/services/api";
 import * as ImagePicker from "expo-image-picker";
 import { Video } from "expo-av";
@@ -139,6 +140,7 @@ export default function Post({ navigation }) {
   };
 
   return (
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#f8d3cf' }}>
     <View style={styles.container}>
       <View style={styles.box}>
         <Text style={styles.label}>Título</Text>
@@ -232,6 +234,7 @@ export default function Post({ navigation }) {
         <Button title="Publicar" onPress={handleSubmit} />
       </View>
     </View>
+    </SafeAreaView>
   );
 }
 

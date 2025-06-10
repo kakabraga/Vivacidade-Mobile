@@ -43,7 +43,7 @@ export default function Login({ navigation }) {
       console.log('Resposta do servidor:', data);  // Mostra a resposta com token
   
       // Navega para a tela principal
-      navigation.navigate('HomeTabs');
+      // navigation.navigate('HomeTabs');
     } catch (error) {
       console.error(error);
       Alert.alert('Erro', 'Credenciais inválidas ou servidor fora do ar');

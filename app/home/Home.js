@@ -8,24 +8,32 @@ import {
   ActivityIndicator,
   RefreshControl,
   TextInput,
-  TouchableOpacity
+  TouchableOpacity,
+  Platform,                
 } from 'react-native';
 import axios from 'axios';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native'; // Importa o hook de navegação
+import { useNavigation } from '@react-navigation/native';
 
 export default function Home() {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  
-  const navigation = useNavigation(); // Inicia o hook de navegação
+
+  // DEFINE O baseURL CORRETAMENTE para cada plataforma
+  const baseURL = Platform.OS === 'android'
+    ? 'http://192.168.0.249:3000'
+    : Platform.OS === 'web'
+    ? 'http://192.168.0.249:3000'
+    : '';
+
+  const navigation = useNavigation();
 
   const fetchPostsLastPosts = async () => {
     try {
-      const response = await axios.get('http://192.168.0.249:3000/api/posts/getLastPosts');
+      const response = await axios.get(`${baseURL}/api/posts/getLastPosts`);
       setPosts(response.data);
     } catch (error) {
       console.error('Erro ao buscar posts:', error);
@@ -37,7 +45,7 @@ export default function Home() {
 
   const fetchPosts = async () => {
     try {
-      const response = await axios.get('http://192.168.0.249:3000/api/posts/get');
+      const response = await axios.get(`${baseURL}/api/posts/get`);
       setPosts(response.data);
     } catch (error) {
       console.error('Erro ao buscar posts:', error);
@@ -64,17 +72,14 @@ export default function Home() {
   };
 
   const handlePostPress = (id) => {
-    // Navega para a tela de detalhes, passando o id do post
     navigation.navigate('PostDetails', { postId: id });
-    {console.log(id)}
   };
 
   const renderItem = ({ item }) => (
     <View style={styles.card}>
       <TouchableOpacity onPress={() => handlePostPress(item.id)}>
-        
         <Image
-          source={{ uri: `http://192.168.0.249:3000/${item.image}` }}
+          source={{ uri: `${baseURL}/${item.image}` }}
           style={styles.image}
           resizeMode="cover"
         />
@@ -102,7 +107,7 @@ export default function Home() {
           value={searchTerm}
           onChangeText={setSearchTerm}
         />
-        {searchTerm.length > 0 && (
+        {!!searchTerm && (
           <TouchableOpacity onPress={() => setSearchTerm('')} style={styles.clearButton}>
             <Ionicons name="close-circle" size={20} color="#888" />
           </TouchableOpacity>
@@ -126,7 +131,7 @@ export default function Home() {
 const styles = StyleSheet.create({
   container: {
     padding: 10,
-    paddingBottom: 70
+    paddingBottom: 70,
   },
   card: {
     flex: 1,
@@ -139,8 +144,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 4,
     elevation: 5,
-    flexDirection: 'column',
-    justifyContent: 'space-between',
   },
   image: {
     width: '100%',
