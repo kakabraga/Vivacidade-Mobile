@@ -34,11 +34,12 @@ export default function Profile_user({ route }) {
   // Define a baseURL corretamente para cada plataforma.
   // Para Android, usa o IP da sua máquina na rede local.
   // Para Web (no mesmo computador), usa 'localhost'.
-  const baseURL = Platform.OS === 'android'
-    ? 'http://192.168.0.249:3000'
-    : Platform.OS === 'web'
-    ? 'http://localhost:3000'
-    : '';
+  const baseURL =
+    Platform.OS === "android"
+      ? "http://192.168.0.249:3000"
+      : Platform.OS === "web"
+      ? "http://localhost:3000"
+      : "";
 
   // Define uma imagem de placeholder para o perfil do usuário e para os posts
   // const defaultProfilePicture = require('./assets/default-profile.png');
@@ -47,9 +48,15 @@ export default function Profile_user({ route }) {
   const getCorrectedPath = (originalPath) => {
     if (!originalPath) return null;
     let correctedPath = originalPath;
-    if (originalPath.startsWith('uploads') && !originalPath.startsWith('uploads/')) {
-      correctedPath = originalPath.replace('uploads', 'uploads/');
-    } else if (!originalPath.startsWith('uploads/') && !originalPath.startsWith('http')) {
+    if (
+      originalPath.startsWith("uploads") &&
+      !originalPath.startsWith("uploads/")
+    ) {
+      correctedPath = originalPath.replace("uploads", "uploads/");
+    } else if (
+      !originalPath.startsWith("uploads/") &&
+      !originalPath.startsWith("http")
+    ) {
       correctedPath = `uploads/${originalPath}`;
     }
     return correctedPath;
@@ -59,11 +66,14 @@ export default function Profile_user({ route }) {
   const fetchProfileDetails = async () => {
     try {
       const response = await axios.get(
-        `${baseURL}/api/users/getuserbyid/${userId}`,
+        `${baseURL}/api/users/getuserbyid/${userId}`
       );
       setUser(response.data[0]);
     } catch (error) {
-      console.error("Erro ao buscar detalhes do perfil:", error.message || error);
+      console.error(
+        "Erro ao buscar detalhes do perfil:",
+        error.message || error
+      );
     }
   };
 
@@ -74,7 +84,9 @@ export default function Profile_user({ route }) {
         `${baseURL}/api/posts/getpostsporuser/${userId}`
       );
       // Ordena os posts por data de criação, do mais recente para o mais antigo
-      const sortedPosts = response.data.sort((a, b) => new Date(b.create_at) - new Date(a.create_at));
+      const sortedPosts = response.data.sort(
+        (a, b) => new Date(b.create_at) - new Date(a.create_at)
+      );
       setPosts(sortedPosts);
     } catch (error) {
       console.error("Erro ao buscar posts do usuário:", error.message || error);
@@ -108,18 +120,13 @@ export default function Profile_user({ route }) {
   const renderUserHeader = () => {
     // Determina a URL final da imagem de perfil
     let photoUri = user?.photo;
-    if (photoUri && !photoUri.startsWith('http')) {
+    if (photoUri && !photoUri.startsWith("http")) {
       photoUri = `${baseURL}/${getCorrectedPath(photoUri)}`;
-
     }
 
     return (
       <View style={styles.userHeader}>
-        <Image
-          source={{ uri: photoUri }}
-          style={styles.avatar}
-         
-        />
+        <Image source={{ uri: photoUri }} style={styles.avatar} />
         <View style={styles.userInfo}>
           <Text style={styles.name}>{user?.nome || "Usuário"}</Text>
           <Text style={styles.email}>{user?.email || "email@exemplo.com"}</Text>
@@ -141,7 +148,6 @@ export default function Profile_user({ route }) {
             source={{ uri: `${baseURL}/${correctedImagePath}` }}
             style={styles.postImage}
             resizeMode="cover"
-           
           />
           <Text style={styles.postTitle}>{item.title}</Text>
           <Text style={styles.postContent}>{item.content}</Text>
@@ -175,8 +181,7 @@ export default function Profile_user({ route }) {
       {/* Botão de Voltar no topo */}
       <TouchableOpacity
         onPress={() => navigation.goBack()} // goBack para voltar à tela anterior
-        style={styles.backButton}
-      >
+        style={styles.backButton}>
         <Ionicons name="arrow-back" size={24} color="#333" />
         <Text style={styles.backButtonText}>Voltar</Text>
       </TouchableOpacity>
@@ -186,7 +191,7 @@ export default function Profile_user({ route }) {
         data={posts}
         renderItem={renderItem}
         keyExtractor={(item) => item.id.toString()}
-        numColumns={1} // Exibe posts em duas colunas para um visual compacto
+        numColumns={2} // Exibe posts em duas colunas para um visual compacto
         contentContainerStyle={styles.postsListContainer}
         refreshControl={
           <RefreshControl
@@ -196,7 +201,11 @@ export default function Profile_user({ route }) {
           />
         }
         // Exibe mensagem se não houver posts
-        ListEmptyComponent={<Text style={styles.noPostsText}>Nenhum post encontrado para este usuário.</Text>}
+        ListEmptyComponent={
+          <Text style={styles.noPostsText}>
+            Nenhum post encontrado para este usuário.
+          </Text>
+        }
       />
     </SafeAreaView>
   );
@@ -209,14 +218,14 @@ const styles = StyleSheet.create({
   },
   loadingIndicator: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   notFoundText: {
-    textAlign: 'center',
+    textAlign: "center",
     marginTop: 50,
     fontSize: 18,
-    color: '#cd5c5c',
+    color: "#cd5c5c",
   },
   backButton: {
     flexDirection: "row",
@@ -224,7 +233,7 @@ const styles = StyleSheet.create({
     padding: 15,
     backgroundColor: "#f8d3cf", // Fundo do botão de voltar
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    borderBottomColor: "#eee",
   },
   backButtonText: {
     marginLeft: 8,
@@ -278,45 +287,49 @@ const styles = StyleSheet.create({
   },
   card: {
     flex: 1,
-    margin: 4, // Margem menor para cards em 2 colunas
-    backgroundColor: '#fff0e0',
-    borderRadius: 10,
-    padding: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.15,
-    shadowRadius: 3,
-    elevation: 4,
+    margin: 3,
+    backgroundColor: "#fff0e0",
+    borderRadius: 12,
+    padding: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 5,
   },
-  postImage: { // Renomeado de 'image' para 'postImage' para evitar conflito e clareza
-    width: '100%',
+  postImage: {
+    // Renomeado de 'image' para 'postImage' para evitar conflito e clareza
+    width: "100%",
     height: 100, // Altura compacta para a imagem do post
     borderRadius: 6,
   },
-  postTitle: { // Renomeado de 'title' para 'postTitle'
-    fontWeight: 'bold',
+  postTitle: {
+    // Renomeado de 'title' para 'postTitle'
+    fontWeight: "bold",
     marginTop: 6,
     fontSize: 25,
     maxHeight: 32, // Limita a 2 linhas
-    overflow: 'hidden',
+    overflow: "hidden",
   },
-  postContent: { // Renomeado de 'content' para 'postContent'
+  postContent: {
+    // Renomeado de 'content' para 'postContent'
     fontSize: 20,
     marginTop: 2,
     maxHeight: 28, // Limita a 2-3 linhas
-    overflow: 'hidden',
+    overflow: "hidden",
   },
-  postTime: { // Renomeado de 'time' para 'postTime'
+  postTime: {
+    // Renomeado de 'time' para 'postTime'
     fontSize: 9,
-    color: '#555',
+    color: "#555",
     marginTop: 4,
-    textAlign: 'right',
+    textAlign: "right",
   },
   noPostsText: {
-    textAlign: 'center',
+    textAlign: "center",
     marginTop: 30,
     fontSize: 16,
-    color: '#888',
+    color: "#888",
   },
   // Estilos de botões de logout, delete e edit (mantidos se não forem usados nesta tela)
   // logoutButton: { ... },

@@ -108,7 +108,7 @@ const CommentsSection = ({ postId }) => {
 
   // Navega até o perfil do usuário
   const handleProfilePress = (id) => {
-    navigation.navigate('Profile_user', { userId: id }); // Corrigido o nome da rota se for 'Profile_user'
+    navigation.navigate('Profie_user', { userId: id }); // Corrigido o nome da rota se for 'Profile_user'
     console.log(`Navegando para o perfil do usuário: ${id}`);
   };
 
