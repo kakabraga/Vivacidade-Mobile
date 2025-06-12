@@ -9,7 +9,7 @@ import {
   RefreshControl,
   TextInput,
   TouchableOpacity,
-  Platform,                
+  Platform,
 } from 'react-native';
 import axios from 'axios';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -22,11 +22,13 @@ export default function Home() {
   const [refreshing, setRefreshing] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
 
-  // DEFINE O baseURL CORRETAMENTE para cada plataforma
+  // Define the baseURL correctly for each platform.
+  // For Android, use your machine's local IP on the network.
+  // For Web (on the same computer), use 'localhost'.
   const baseURL = Platform.OS === 'android'
     ? 'http://192.168.0.249:3000'
     : Platform.OS === 'web'
-    ? 'http://192.168.0.249:3000'
+    ? 'http://localhost:3000' // Changed to localhost for web/desktop environment
     : '';
 
   const navigation = useNavigation();
@@ -36,7 +38,8 @@ export default function Home() {
       const response = await axios.get(`${baseURL}/api/posts/getLastPosts`);
       setPosts(response.data);
     } catch (error) {
-      console.error('Erro ao buscar posts:', error);
+      console.error('Error fetching last posts (fetchPostsLastPosts):', error.message || error);
+      // Optional: Add visual feedback for the user in case of an error
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -48,7 +51,8 @@ export default function Home() {
       const response = await axios.get(`${baseURL}/api/posts/get`);
       setPosts(response.data);
     } catch (error) {
-      console.error('Erro ao buscar posts:', error);
+      console.error('Error fetching posts (fetchPosts):', error.message || error);
+      // Optional: Add visual feedback for the user in case of an error
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -75,20 +79,42 @@ export default function Home() {
     navigation.navigate('PostDetails', { postId: id });
   };
 
-  const renderItem = ({ item }) => (
-    <View style={styles.card}>
-      <TouchableOpacity onPress={() => handlePostPress(item.id)}>
-        <Image
-          source={{ uri: `${baseURL}/${item.image}` }}
-          style={styles.image}
-          resizeMode="cover"
-        />
-        <Text style={styles.title}>{item.title}</Text>
-        <Text style={styles.content}>{item.content}</Text>
-        <Text style={styles.time}>Postado às: {formatTime(item.create_at)}</Text>
-      </TouchableOpacity>
-    </View>
-  );
+  const renderItem = ({ item }) => {
+    // Log the original image path from the backend
+    console.log('Original item.image:', item.image);
+
+    // Correct the image path if it's missing the slash after 'uploads'
+    let correctedImagePath = item.image;
+    if (item.image && item.image.startsWith('uploads') && !item.image.startsWith('uploads/')) {
+      // If it starts with 'uploads' but not 'uploads/', insert the slash
+      correctedImagePath = item.image.replace('uploads', 'uploads/');
+    } else if (item.image && !item.image.startsWith('uploads/')) {
+      // If it doesn't start with 'uploads/', assume it's just the filename and prepend 'uploads/'
+      correctedImagePath = `uploads/${item.image}`;
+    }
+
+    // Log the corrected image path
+    console.log('Corrected Image Path:', correctedImagePath);
+
+    return (
+      <View style={styles.card}>
+        <TouchableOpacity onPress={() => handlePostPress(item.id)}>
+          {/* Render the image with the full URL */}
+          <Image
+            source={{ uri: `${baseURL}/${correctedImagePath}` }}
+            style={styles.image}
+            resizeMode="cover"
+            // Add a local placeholder that you should create in ./assets/placeholder.png
+            // Add more detailed error handling
+           
+          />
+          <Text style={styles.title}>{item.title}</Text>
+          <Text style={styles.content}>{item.content}</Text>
+          <Text style={styles.time}>Postado ás: {formatTime(item.create_at)}</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  };
 
   const filteredPosts = posts.filter(post =>
     post.title.toLowerCase().includes(searchTerm.toLowerCase())
@@ -103,7 +129,7 @@ export default function Home() {
       <View style={styles.searchContainer}>
         <TextInput
           style={styles.searchInput}
-          placeholder="Buscar por título..."
+          placeholder="Search by title..."
           value={searchTerm}
           onChangeText={setSearchTerm}
         />
@@ -118,7 +144,7 @@ export default function Home() {
         data={filteredPosts}
         renderItem={renderItem}
         keyExtractor={item => item.id.toString()}
-        numColumns={1}
+        numColumns={3}
         contentContainerStyle={styles.container}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#ff9f6e']} />
@@ -135,7 +161,7 @@ const styles = StyleSheet.create({
   },
   card: {
     flex: 1,
-    margin: 5,
+    margin: 3,
     backgroundColor: '#fff0e0',
     borderRadius: 12,
     padding: 10,
@@ -147,20 +173,20 @@ const styles = StyleSheet.create({
   },
   image: {
     width: '100%',
-    height: 100,
+    height: 200,
     borderRadius: 8,
   },
   title: {
     fontWeight: 'bold',
     marginTop: 8,
-    fontSize: 14,
+    fontSize: 25,
   },
   content: {
-    fontSize: 12,
+    fontSize: 20,
     marginTop: 4,
   },
   time: {
-    fontSize: 12,
+    fontSize: 18,
     color: '#555',
   },
   searchContainer: {

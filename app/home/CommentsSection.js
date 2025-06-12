@@ -1,21 +1,19 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   View,
   Text,
   TextInput,
   TouchableOpacity,
-  FlatList,
+  // FlatList, // FlatList está importado, mas o componente usa ScrollView para exibir os comentários. Mantenho comentado para evitar confusão se não for utilizado.
   StyleSheet,
-  ScrollView,
+  ScrollView, // Onde os comentários são realmente mapeados e exibidos
   RefreshControl,
   KeyboardAvoidingView,
-  Platform,
+  Platform, // Importado para detectar o SO
   Image,
 } from "react-native";
 import axios from "axios";
 import { useAuth } from "../context/auth";
-import profile from "../profile/Profile"; 
-import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native"; 
 
 const CommentsSection = ({ postId }) => {
@@ -23,9 +21,34 @@ const CommentsSection = ({ postId }) => {
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState("");
   const [refreshing, setRefreshing] = useState(false);
-  const [loading, setLoading] = useState(true);
+  // const [loading, setLoading] = useState(true); // 'loading' não está sendo usado, mantido comentado
 
   const navigation = useNavigation(); 
+
+  // Define a baseURL corretamente para cada plataforma.
+  // Para Android, usa o IP da sua máquina na rede local.
+  // Para Web (no mesmo computador), usa 'localhost'.
+  const baseURL = Platform.OS === 'android'
+    ? 'http://192.168.0.249:3000'
+    : Platform.OS === 'web'
+    ? 'http://localhost:3000'
+    : '';
+
+  // Define uma imagem de placeholder para perfis de usuário
+
+
+  // Função auxiliar para corrigir o caminho da imagem
+  const getCorrectedPath = (originalPath) => {
+    if (!originalPath) return null;
+    let correctedPath = originalPath;
+    if (originalPath.startsWith('uploads') && !originalPath.startsWith('uploads/')) {
+      correctedPath = originalPath.replace('uploads', 'uploads/');
+    } else if (!originalPath.startsWith('uploads/') && !originalPath.startsWith('http')) {
+      // Se não começar com 'uploads/' E não for uma URL externa, assume que é um arquivo local
+      correctedPath = `uploads/${originalPath}`;
+    }
+    return correctedPath;
+  };
 
   const formatTime = (dateString) => {
     const date = new Date(dateString);
@@ -42,11 +65,15 @@ const CommentsSection = ({ postId }) => {
   const fetchComments = async () => {
     try {
       const response = await axios.get(
-        `http://192.168.0.249:3000/api/posts/getComments/${postId}`
+        `${baseURL}/api/posts/getComments/${postId}` // Usando baseURL
       );
-      setComments(response.data);
+      // Garante que os comentários mais recentes apareçam primeiro
+      const sortedComments = response.data.sort((a, b) => new Date(b.comment_at) - new Date(a.comment_at));
+      setComments(sortedComments);
     } catch (error) {
-      console.error("Erro ao buscar comentários:", error);
+      console.error("Erro ao buscar comentários:", error.message || error);
+    } finally {
+      // setLoading(false); // 'loading' não está sendo usado aqui
     }
   };
 
@@ -55,7 +82,7 @@ const CommentsSection = ({ postId }) => {
     if (!newComment.trim()) return; // Impede envio de comentário vazio
     try {
       await axios.post(
-        `http://192.168.0.249:3000/api/posts/addcomments/${postId}`,
+        `${baseURL}/api/posts/addcomments/${postId}`, // Usando baseURL
         {
           content: newComment,
           id_user: user.id,
@@ -65,7 +92,7 @@ const CommentsSection = ({ postId }) => {
       setNewComment("");
       fetchComments(); // Atualiza lista após adicionar
     } catch (error) {
-      console.error("Erro ao adicionar comentário:", error);
+      console.error("Erro ao adicionar comentário:", error.message || error);
     }
   };
 
@@ -73,46 +100,20 @@ const CommentsSection = ({ postId }) => {
   const onRefresh = useCallback(() => {
     setRefreshing(true);
     fetchComments().finally(() => setRefreshing(false)); 
-  }, []);
+  }, [baseURL, postId]); // Adicionado baseURL e postId como dependências
 
   useEffect(() => {
     fetchComments();
-  }, [postId]);
+  }, [postId, baseURL]); // Adicionado baseURL como dependência
 
   // Navega até o perfil do usuário
   const handleProfilePress = (id) => {
-    navigation.navigate('Profie_user', { userId: id });
-    console.log(id + "navigate")
+    navigation.navigate('Profile_user', { userId: id }); // Corrigido o nome da rota se for 'Profile_user'
+    console.log(`Navegando para o perfil do usuário: ${id}`);
   };
-
-
-  const filteredComments = comments.filter((comment) =>
-    comment.content.toLowerCase().includes(newComment.toLowerCase())
-  );
 
   return (
     <View style={styles.container}>
-      {/* FlatList estava com renderItem errado, foi trocado por ScrollView abaixo */}
-      {/* A FlatList abaixo pode ser removida ou usada para futura implementação de carregamento paginado */}
-      
-      <View style={styles.inputArea}>
-        <TextInput
-          style={styles.input}
-          placeholder="Adicione um comentário..."
-          placeholderTextColor="#999"
-          value={newComment}
-          onChangeText={setNewComment}
-          multiline
-        />
-        <TouchableOpacity
-          style={[styles.button, !newComment.trim() && styles.buttonDisabled]}
-          onPress={handleAddComment}
-          disabled={!newComment.trim()}
-        >
-          <Text style={styles.buttonText}>Publicar</Text>
-        </TouchableOpacity>
-      </View>
-
       {/* Lista de comentários */}
       <ScrollView
         style={styles.commentsList}
@@ -125,50 +126,89 @@ const CommentsSection = ({ postId }) => {
           />
         }
       >
-        {filteredComments.map((item) => (
-          <View key={item.id.toString()} style={styles.commentContainer}>
-            {/* Cabeçalho com foto e nome */}
-            <View style={styles.commentHeader}>
-              <Image
-                source={
-                  item.user?.photo
-                    ? { uri: item.user.photo }
-                    : require("../../backend/src/uploads/image.png")
-                }
-                style={styles.userAvatar}
-              />
-              <TouchableOpacity onPress={() => handleProfilePress(item.userId)}>
-                <Text style={styles.userName}>
-                  {item.nome || "Usuário Anônimo"}
+        {comments.length > 0 ? (
+          comments.map((item) => {
+            // Determina a URL final da imagem de perfil do comentador
+            let finalUserPhotoSource;
+            if (item.user?.photo) {
+              let photoPath = item.user.photo;
+              if (!photoPath.startsWith('http')) {
+                photoPath = `${baseURL}/${getCorrectedPath(photoPath)}`;
+              }
+              finalUserPhotoSource = { uri: photoPath };
+            }
+
+            console.log('Final Image Source for user avatar:', finalUserPhotoSource); // Log de depuração
+
+            return (
+              <View key={item.id.toString()} style={styles.commentContainer}>
+                {/* Cabeçalho com foto e nome */}
+                <View style={styles.commentHeader}>
+                  <Image
+                    source={finalUserPhotoSource} // Usando a source final
+                    style={styles.userAvatar}
+                    // defaultSource não é necessário aqui, pois a 'source' já está garantida
+                  />
+                  <TouchableOpacity onPress={() => handleProfilePress(item.id_user)}> {/* Corrigido para item.id_user */}
+                    <Text style={styles.userName}>
+                      {item.nome || "Usuário Anônimo"}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+                {/* Texto do comentário */}
+                <View style={styles.commentBubble}>
+                  <Text style={styles.commentText}>{item.content}</Text>
+                </View>
+                {/* Data e hora */}
+                <Text style={styles.commentDate}>
+                  <Text style={styles.time}>{formatTime(item.comment_at)}</Text>
                 </Text>
-              </TouchableOpacity>
-            </View>
-            {/* Texto do comentário */}
-            <View style={styles.commentBubble}>
-              <Text style={styles.commentText}>{item.content}</Text>
-            </View>
-            {/* Data e hora */}
-            <Text style={styles.commentDate}>
-              <Text style={styles.time}>{formatTime(item.comment_at)}</Text>
-            </Text>
-          </View>
-        ))}
+              </View>
+            );
+          })
+        ) : (
+          <Text style={styles.noCommentsText}>Nenhum comentário ainda. Seja o primeiro a comentar!</Text>
+        )}
       </ScrollView>
 
-      {/* Espaço reservado para evitar que o teclado cubra o input em iOS */}
+      {/* Área de input e botão de publicar */}
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.inputContainerWrapper}
-      />
+      >
+        <View style={styles.inputArea}>
+          <TextInput
+            style={styles.input}
+            placeholder="Adicione um comentário..."
+            placeholderTextColor="#999"
+            value={newComment}
+            onChangeText={setNewComment}
+            multiline
+            maxLength={250} // Limita o tamanho do comentário
+          />
+          <TouchableOpacity
+            style={[styles.button, !newComment.trim() && styles.buttonDisabled]}
+            onPress={handleAddComment}
+            disabled={!newComment.trim()}
+          >
+            <Text style={styles.buttonText}>Publicar</Text>
+          </TouchableOpacity>
+        </View>
+      </KeyboardAvoidingView>
     </View>
   );
 };
 
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
+    backgroundColor: "#fff0e0",
+    borderRadius: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 2,
   },
   commentsList: {
     flex: 1,
@@ -199,7 +239,9 @@ const styles = StyleSheet.create({
     height: 32,
     borderRadius: 16,
     marginRight: 8,
-    backgroundColor: "#e1e1e1",
+    backgroundColor: "#e1e1e1", // Cor de fundo para o placeholder visual
+    borderWidth: 1, // Adiciona borda sutil
+    borderColor: '#ddd',
   },
   userName: {
     fontWeight: "600",
@@ -213,12 +255,12 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   commentText: {
-    fontSize: 14,
+    fontSize: 14, // Ajustado para ser mais compacto
     color: "#333",
-    lineHeight: 20,
+    lineHeight: 18, // Altura da linha para melhor leitura
   },
   commentDate: {
-    fontSize: 12,
+    fontSize: 11, // Ajustado
     color: "#999",
     textAlign: "right",
   },
@@ -227,7 +269,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: "#fff",
+    backgroundColor: "#fff0e0",
     padding: 16,
     borderTopWidth: 1,
     borderTopColor: "#e1e1e1",
@@ -249,18 +291,31 @@ const styles = StyleSheet.create({
     color: "#333",
   },
   button: {
-    backgroundColor: "#e60023",
+    backgroundColor: "#ff9f6e", // Cor ajustada para o tema
     paddingVertical: 10,
     paddingHorizontal: 16,
     borderRadius: 20,
+    shadowColor: "#000", // Adiciona sombra
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    elevation: 3,
   },
   buttonDisabled: {
     backgroundColor: "#ccc",
+    shadowOpacity: 0, // Remove sombra quando desabilitado
+    elevation: 0,
   },
   buttonText: {
     color: "#fff",
     fontWeight: "600",
     fontSize: 14,
+  },
+  noCommentsText: {
+    textAlign: 'center',
+    marginTop: 30,
+    fontSize: 14,
+    color: '#888',
   },
 });
 

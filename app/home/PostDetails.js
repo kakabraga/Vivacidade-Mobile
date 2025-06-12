@@ -7,6 +7,7 @@ import {
   ActivityIndicator,
   ScrollView,
   TouchableOpacity,
+  Platform, // Importar Platform para detectar o SO
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import CommentsSection from "./CommentsSection";
@@ -21,14 +22,23 @@ const PostDetails = ({ route }) => {
   const [loading, setLoading] = useState(true);
   const navigation = useNavigation(); // Hook para navegação
 
+  // Define the baseURL correctly for each platform.
+  // For Android, use your machine's local IP on the network.
+  // For Web (on the same computer), use 'localhost'.
+  const baseURL = Platform.OS === 'android'
+    ? 'http://192.168.0.249:3000'
+    : Platform.OS === 'web'
+    ? 'http://localhost:3000' // Use localhost for web/desktop environment
+    : '';
+
   const fetchPostDetails = async () => {
     try {
       const response = await axios.get(
-        `http://192.168.0.249:3000/api/posts/getid/${postId}`
+        `${baseURL}/api/posts/getid/${postId}`
       );
       setPost(response.data);
     } catch (error) {
-      console.error("Erro ao buscar detalhes do post:", error);
+      console.error("Erro ao buscar detalhes do post:", error.message || error);
     } finally {
       setLoading(false);
     }
@@ -45,6 +55,19 @@ const PostDetails = ({ route }) => {
     return `${hours}:${minutes}`;
   };
 
+  // Helper function to correct the image/video path
+  const getCorrectedPath = (originalPath) => {
+    if (!originalPath) return null;
+    let correctedPath = originalPath;
+    if (originalPath.startsWith('uploads') && !originalPath.startsWith('uploads/')) {
+      correctedPath = originalPath.replace('uploads', 'uploads/');
+    } else if (!originalPath.startsWith('uploads/')) {
+      // If it doesn't start with 'uploads/', assume it's just the filename and prepend 'uploads/'
+      correctedPath = `uploads/${originalPath}`;
+    }
+    return correctedPath;
+  };
+
   if (loading) {
     return (
       <ActivityIndicator
@@ -54,6 +77,9 @@ const PostDetails = ({ route }) => {
       />
     );
   }
+
+  // Define a placeholder image (you'll need to create this file)
+  
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
@@ -72,17 +98,17 @@ const PostDetails = ({ route }) => {
             <View style={styles.card}>
               {post.image && (
                 <Image
-                  source={{ uri: `http://192.168.0.249:3000/${post.image}` }}
+                  source={{ uri: `${baseURL}/${getCorrectedPath(post.image)}` }}
                   style={styles.image}
+                  // Add a local placeholder for images
                 />
               )}
               {post.video && (
                 <Video
-                  source={{ uri: `http://192.168.0.249:3000/${post.video}` }}
+                  source={{ uri: `${baseURL}/${getCorrectedPath(post.video)}` }}
                   style={styles.video}
                   useNativeControls
                   resizeMode="contain"
-                  isLooping
                 />
               )}
               <Text style={styles.title}>{post.title}</Text>
@@ -104,12 +130,12 @@ const PostDetails = ({ route }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
+    backgroundColor: "#f8d3cf",
     paddingHorizontal: 16,
     paddingTop: 20,
   },
   card: {
-    backgroundColor: "#fff",
+    backgroundColor: "#fff0e0",
     borderRadius: 20,
     padding: 16,
     shadowColor: "#000",
@@ -126,19 +152,19 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   title: {
-    fontSize: 22,
+    fontSize: 25,
     fontWeight: "600",
     color: "#333",
     marginBottom: 10,
   },
   content: {
-    fontSize: 16,
+    fontSize: 20,
     color: "#555",
     lineHeight: 22,
     marginBottom: 12,
   },
   time: {
-    fontSize: 13,
+    fontSize: 18,
     color: "#999",
     textAlign: "right",
   },

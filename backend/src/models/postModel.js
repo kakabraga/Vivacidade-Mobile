@@ -53,7 +53,7 @@ const deletePost = (id, callback) => {
 };
 
 const getLastPosts = (callback) => {
-    const sql = 'SELECT * FROM posts ORDER BY ID DESC LIMIT 8';
+    const sql = 'SELECT * FROM posts ORDER BY ID DESC LIMIT 10';
     db.query(sql, callback);
 };
 

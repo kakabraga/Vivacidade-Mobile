@@ -8,12 +8,14 @@ import {
   RefreshControl,
   TouchableOpacity,
   TextInput,
+  Platform, // Importar Platform para detectar o SO
 } from "react-native";
 import { useAuth } from "../context/auth";
 import { Ionicons } from "@expo/vector-icons";
 import axios from "axios";
 import { useNavigation } from "@react-navigation/native";
 import { SafeAreaView } from "react-native-safe-area-context";
+
 // Utilitário para formatar hora
 const formatTime = (dateString) => {
   const date = new Date(dateString);
@@ -28,16 +30,45 @@ export default function Profile() {
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const navigation = useNavigation();
+
+  // Define the baseURL correctly for each platform.
+  // For Android, use your machine's local IP on the network.
+  // For Web (on the same computer), use 'localhost'.
+  const baseURL = Platform.OS === 'android'
+    ? 'http://192.168.0.249:3000'
+    : Platform.OS === 'web'
+    ? 'http://localhost:3000' // Use localhost for web/desktop environment
+    : '';
+
+  // Define a placeholder image for user profile (you'll need to create this file)
+  // const defaultProfilePicture = require('./assets/default-profile.png');
+  // Define a placeholder image for posts (you'll need to create this file)
+  // const defaultPostImage = require('./assets/placeholder.png');
+
+  // Helper function to correct the image path
+  const getCorrectedPath = (originalPath) => {
+    if (!originalPath) return null; // Handle null or undefined paths
+    let correctedPath = originalPath;
+    if (originalPath.startsWith('uploads') && !originalPath.startsWith('uploads/')) {
+      // If it starts with 'uploads' but not 'uploads/', insert the slash
+      correctedPath = originalPath.replace('uploads', 'uploads/');
+    } else if (!originalPath.startsWith('uploads/') && !originalPath.startsWith('http')) {
+      // If it doesn't start with 'uploads/' AND is not an external URL (http), prepend 'uploads/'
+      correctedPath = `uploads/${originalPath}`;
+    }
+    return correctedPath;
+  };
+
   const handleLogout = () => {
     logout();
   };
+
   const handlePostPress = (id) => {
     // Navega para a tela de detalhes, passando o id do post
     navigation.navigate("PostDetails", { postId: id });
-    {
-      console.log("id do posts: " + id);
-    }
+    console.log("id do posts: " + id);
   };
+
   const handleEditPress = (postData) => {
     navigation.navigate("EditPost", { postData });
     console.log("Editando post:", postData.id);
@@ -46,22 +77,23 @@ export default function Profile() {
   const handleDeletePost = async (postId) => {
     try {
       await axios.delete(
-        `http://192.168.0.249:3000/api/posts/delete/${postId}`
+        `${baseURL}/api/posts/delete/${postId}` // Usando baseURL
       );
       // Após deletar, atualiza a lista
       fetchPosts();
     } catch (error) {
-      console.error("Erro ao deletar post:", error);
+      console.error("Erro ao deletar post:", error.message || error);
     }
   };
+
   const fetchPosts = async () => {
     try {
       const response = await axios.get(
-        `http://192.168.0.249:3000/api/posts/getpostsporuser/${user.id}`
+        `${baseURL}/api/posts/getpostsporuser/${user.id}` // Usando baseURL
       );
       setPosts(response.data);
     } catch (error) {
-      console.error("Erro ao buscar posts:", error);
+      console.error("Erro ao buscar posts:", error.message || error);
     } finally {
       setRefreshing(false);
     }
@@ -78,64 +110,79 @@ export default function Profile() {
   const onRefresh = useCallback(() => {
     setRefreshing(true);
     fetchPosts();
-  }, []);
+  }, [baseURL, user]); // Adicionado baseURL e user como dependências
 
   useEffect(() => {
-    fetchPosts();
-  }, []);
+    // Apenas busca posts se o user.id estiver disponível
+    if (user && user.id) {
+      fetchPosts();
+    }
+  }, [user, baseURL]); // Adicionado user e baseURL como dependências
 
-  const renderUserHeader = () => (
-    <View style={styles.userHeader}>
-      <Image
-        source={{
-          uri:
-            user?.photo ||
-            "https://imgur.com/gallery/default-profile-picture-H7Olo4D",
-        }}
-        style={styles.avatar}
-      />
-      <View style={styles.userInfo}>
-        <Text style={styles.name}>{user?.nome || "Usuário"}</Text>
-        <Text style={styles.email}>{user?.email || "email@exemplo.com"}</Text>
-        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-          <Text style={styles.logoutButtonText}>Sair</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
-  );
+  const renderUserHeader = () => {
+    // Determina a URL final da imagem de perfil
+    let photoUri = user?.photo;
+    if (photoUri && !photoUri.startsWith('http')) { // Se não for uma URL externa, corrija o caminho
+      photoUri = `${baseURL}/${getCorrectedPath(photoUri)}`;
+    }
+    // Se a foto já for uma URL externa (http/https), ela será usada diretamente.
 
-  const renderItem = ({ item }) => (
-    <View style={styles.card}>
-      <TouchableOpacity onPress={() => handlePostPress(item.id)}>
+    return (
+      <View style={styles.userHeader}>
         <Image
-          source={{ uri: `http://192.168.0.249:3000/${item.image}` }}
-          style={styles.image}
-          resizeMode="cover"
+          source={{ uri: photoUri }}
+          style={styles.avatar}
+           // Fallback para a imagem padrão
+          
         />
-        <Text style={styles.title}>{item.title}</Text>
-        <Text style={styles.content}>{item.content}</Text>
-        <Text style={styles.time}>
-          Postado às: {formatTime(item.create_at)}
-        </Text>
-      </TouchableOpacity>
+        <View style={styles.userInfo}>
+          <Text style={styles.name}>{user?.nome || "Usuário"}</Text>
+          <Text style={styles.email}>{user?.email || "email@exemplo.com"}</Text>
+          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+            <Text style={styles.logoutButtonText}>Sair</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  };
 
-      {/* Ícone de deletar visível somente para o criador */}
-      {item.userId === user.id && (
-        <TouchableOpacity
-          onPress={() => handleDeletePost(item.id)}
-          style={styles.deleteButton}>
-          <Ionicons name="trash" size={24} color="red" />
+  const renderItem = ({ item }) => {
+    // Corrige o caminho da imagem do post
+    const correctedImagePath = getCorrectedPath(item.image);
+
+    return (
+      <View style={styles.card}>
+        <TouchableOpacity onPress={() => handlePostPress(item.id)}>
+          <Image
+            source={{ uri: `${baseURL}/${correctedImagePath}` }}
+            style={styles.image}
+            resizeMode="cover"
+          />
+          <Text style={styles.title}>{item.title}</Text>
+          <Text style={styles.content}>{item.content}</Text>
+          <Text style={styles.time}>
+            Postado às: {formatTime(item.create_at)}
+          </Text>
         </TouchableOpacity>
-      )}
-      {item.userId === user.id && (
-        <TouchableOpacity
-          onPress={() => handleEditPress(item.id)}
-          style={styles.editButton}>
-          <Ionicons name="pencil" size={24} color="red" />
-        </TouchableOpacity>
-      )}
-    </View>
-  );
+
+        {/* Ícone de deletar visível somente para o criador */}
+        {item.userId === user.id && (
+          <TouchableOpacity
+            onPress={() => handleDeletePost(item.id)}
+            style={styles.deleteButton}>
+            <Ionicons name="trash" size={24} color="red" />
+          </TouchableOpacity>
+        )}
+        {item.userId === user.id && (
+          <TouchableOpacity
+            onPress={() => handleEditPress(item.id)} // Passando item.id para handleEditPress
+            style={styles.editButton}>
+            <Ionicons name="pencil" size={24} color="red" />
+          </TouchableOpacity>
+        )}
+      </View>
+    );
+  };
 
   return (
     <SafeAreaView style={styles.wrapper} edges={["top", "left", "right"]}>
@@ -147,7 +194,7 @@ export default function Profile() {
         <View style={styles.searchContainer}>
           <Text style={styles.titleSearch}>Buscar posts:</Text>
           <TextInput
-            style={styles.searchInput} // Corrigido: estava usando styles.searchContainer em vez de searchInput
+            style={styles.searchInput}
             placeholder="Buscar posts..."
             placeholderTextColor="#999"
             value={searchQuery}
@@ -158,7 +205,6 @@ export default function Profile() {
             <TouchableOpacity
               onPress={() => setSearchQuery("")}
               style={styles.clearButton}>
-              {/* Certifique-se de importar Ionicons: import { Ionicons } from '@expo/vector-icons' */}
               <Ionicons name="close-circle" size={20} color="#888" />
             </TouchableOpacity>
           )}
@@ -302,7 +348,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     borderRadius: 12,
     margin: 10,
-    paddingHorizontal: 0,
+    paddingHorizontal: 10, // Ajustado para ter padding interno
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
@@ -313,24 +359,24 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 14,
     paddingVertical: 10,
+    paddingLeft: 10, // Adicionado padding à esquerda para separar do texto "Buscar posts:"
   },
-deleteButton: {
-  position: "absolute",
-  top: 8, // Posição superior
-  right: 8,
-  backgroundColor: "rgba(255,255,255,0.8)",
-  borderRadius: 20,
-  padding: 4,
-  zIndex: 1,
-},
-editButton: {
-  position: "absolute",
-  top: 44, // Aumentado para que fique abaixo do botão de deletar
-  right: 8,
-  backgroundColor: "rgba(255,255,255,0.8)",
-  borderRadius: 20,
-  padding: 4,
-  zIndex: 1,
-},
-
+  deleteButton: {
+    position: "absolute",
+    top: 8, // Posição superior
+    right: 8,
+    backgroundColor: "rgba(255,255,255,0.8)",
+    borderRadius: 20,
+    padding: 4,
+    zIndex: 1,
+  },
+  editButton: {
+    position: "absolute",
+    top: 44, // Aumentado para que fique abaixo do botão de deletar
+    right: 8,
+    backgroundColor: "rgba(255,255,255,0.8)",
+    borderRadius: 20,
+    padding: 4,
+    zIndex: 1,
+  },
 });
