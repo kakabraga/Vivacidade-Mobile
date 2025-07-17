@@ -1,7 +1,8 @@
 # 📱 Vivacidade
 
-**Vivacidade: Estímulo e Criatividade para Idosos** é um aplicativo mobile desenvolvido com o objetivo de promover a inclusão digital de pessoas idosas, incentivando a criatividade por meio de tutoriais de atividades manuais como artesanato, costura, culinária e mais.
+**Vivacidade: Estímulo e Criatividade para Idosos** é um projeto extensionista que visa promover a inclusão digital de pessoas idosas por meio da criatividade. O projeto consistiu na codificação de um aplicativo mobile desenvolvido para facilitar o acesso e compartilhamento de tutoriais de atividades manuais, como artesanato, costura, culinária, entre outras.
 
+A iniciativa busca estimular o aprendizado, a autonomia e o engajamento social dos idosos, oferecendo uma interface amigável e acessível, com foco na simplicidade de uso e na valorização da experiência individual.
 ---
 
 ## ✨ Funcionalidades
